@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopZone - Your Ultimate Shopping Destination</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-shopping-bag me-2"></i>ShopZone
+            </a>
+            
+            <!-- Search Bar -->
+            <div class="d-flex flex-grow-1 mx-4">
+                <div class="search-container w-100">
+                    <input type="search" id="searchInput" class="form-control search-input" placeholder="Search for products...">
+                    <button class="btn-search" onclick="searchProducts()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Navigation Links -->
+            <div class="navbar-nav flex-row">
+                <a class="nav-link me-3" href="index.html">
+                    <i class="fas fa-home me-1"></i>Home
+                </a>
+                <a class="nav-link me-3" href="cart.html">
+                    <i class="fas fa-shopping-cart me-1"></i>Cart
+                    <span class="badge bg-primary ms-1" id="cartCount">0</span>
+                </a>
+                <a class="nav-link" href="login.html" id="authLink">
+                    <i class="fas fa-user me-1"></i>Login
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Category Filter -->
+    <div class="container-fluid mt-1">
+        <div class="category-filter">
+            <div class="d-flex flex-wrap justify-content-center">
+                <button class="category-btn active" data-category="all" onclick="filterByCategory('all')">All</button>
+                <button class="category-btn" data-category="electronics" onclick="filterByCategory('electronics')">Electronics</button>
+                <button class="category-btn" data-category="books" onclick="filterByCategory('books')">Books</button>
+                <button class="category-btn" data-category="clothing" onclick="filterByCategory('clothing')">Clothing</button>
+                <button class="category-btn" data-category="home" onclick="filterByCategory('home')">Home Deco.</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="container-fluid mt-3">
+        <div id="productsContainer" class="row g-4">
+            <!-- Products will be loaded here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="text-center mt-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Loading products...</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+    <script src="graphql.js"></script>
+</body>
+</html>
