@@ -7,7 +7,7 @@ import { typeDefs, resolvers } from './schema';
 import { setupDatabase } from './database/setup';
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 async function startServer() {
     console.log('🚀 Starting ShopZone Server...');

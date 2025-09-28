@@ -402,7 +402,7 @@ export const resolvers = {
             if (!user) throw new Error('Not authenticated');
             
             try {
-                // Get cart items
+                // Get cart items with proper includes
                 const cartItems = await Cart.findAll({
                     where: { userId: user.id },
                     include: [{ model: Product }]
@@ -412,15 +412,18 @@ export const resolvers = {
                     throw new Error('Cart is empty');
                 }
                 
-                // Calculate total
+                // Calculate total - FIX: Access product properly
                 let total = 0;
                 for (const item of cartItems) {
-                    total += item.productId.price * item.quantity;
+                    const product = item.productId || item.productId; // Handle both possible names
+                    if (product && product.price) {
+                        total += parseFloat(product.price.toString()) * item.quantity;
+                    }
                 }
                 
                 // Add tax (8.5%)
                 const tax = total * 0.085;
-                // Add shipping (free over $50)
+                // Add shipping (free over ₹50)
                 const shipping = total > 50 ? 0 : 5.99;
                 total = total + tax + shipping;
                 
@@ -429,24 +432,27 @@ export const resolvers = {
                     userId: user.id,
                     total,
                     status: 'pending',
-                    shippingAddress: JSON.stringify(shippingAddress),
-                    paymentMethod: JSON.stringify(paymentMethod)
+                    shippingAddress: typeof shippingAddress === 'string' ? shippingAddress : JSON.stringify(shippingAddress),
+                    paymentMethod: typeof paymentMethod === 'string' ? paymentMethod : JSON.stringify(paymentMethod)
                 });
                 
-                // Create order items
+                // Create order items - FIX: Access product properly
                 for (const cartItem of cartItems) {
-                    await OrderItem.create({
-                        orderId: order.id,
-                        productId: cartItem.productId,
-                        quantity: cartItem.quantity,
-                        price: cartItem.productId.price
-                    });
-                    
-                    // Update product stock
-                    const product = await Product.findByPk(cartItem.productId);
+                    const product = cartItem.productId || cartItem.productId;
                     if (product) {
-                        product.stock -= cartItem.quantity;
-                        await product.save();
+                        await OrderItem.create({
+                            orderId: order.id,
+                            productId: cartItem.productId,
+                            quantity: cartItem.quantity,
+                            price: parseFloat(product.price.toString())
+                        });
+                        
+                        // Update product stock
+                        const productToUpdate = await Product.findByPk(cartItem.productId);
+                        if (productToUpdate) {
+                            productToUpdate.stock -= cartItem.quantity;
+                            await productToUpdate.save();
+                        }
                     }
                 }
                 

@@ -1,219 +1,246 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - ShopZone</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="style.css" rel="stylesheet">
-</head>
-<body>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link href="style.css" rel="stylesheet" />
+  </head>
+  <body>
     <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-4">
-                <div class="card shadow">
-                    <div class="card-body p-4">
-                        <div class="text-center mb-4">
-                            <h2><i class="fas fa-shopping-bag text-primary"></i> ShopZone</h2>
-                            <p class="text-muted">Sign in to your account</p>
-                        </div>
-                        
-                        <div id="errorAlert" class="alert alert-danger d-none" role="alert">
-                            <i class="fas fa-exclamation-circle me-2"></i>
-                            <span id="errorMessage"></span>
-                        </div>
-                        
-                        <div id="loadingSpinner" class="text-center d-none">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p class="mt-2">Signing you in...</p>
-                        </div>
-                        
-                        <form id="loginForm">
-                            <div class="mb-3">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" required 
-                                       placeholder="Enter your email">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" required 
-                                       placeholder="Enter your password">
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100" id="loginBtn">
-                                <i class="fas fa-sign-in-alt me-2"></i>Login
-                            </button>
-                        </form>
-                        
-                        <div class="text-center mt-4">
-                            <hr>
-                            <p class="mb-2">Don't have an account? <a href="signup.html" class="text-primary">Sign up</a></p>
-                            <a href="index.html" class="text-muted">
-                                <i class="fas fa-arrow-left me-1"></i>Back to Shop
-                            </a>
-                        </div>
-                        
-                        <div class="mt-4 p-3 bg-light rounded">
-                            <small class="text-muted">
-                                <strong>Demo Accounts:</strong><br>
-                                <button type="button" class="btn btn-link btn-sm p-0" onclick="fillAdmin()">
-                                    👑 Admin: admin@shopzone.com / admin123
-                                </button><br>
-                                <button type="button" class="btn btn-link btn-sm p-0" onclick="fillCustomer()">
-                                    👤 Customer: customer@shopzone.com / customer123
-                                </button>
-                            </small>
-                        </div>
-                    </div>
+      <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+          <div class="card shadow">
+            <div class="card-body p-4">
+              <div class="text-center mb-4">
+                <h2>
+                  <i class="fas fa-shopping-bag text-primary"></i> ShopZone
+                </h2>
+                <p class="text-muted">Sign in to your account</p>
+              </div>
+
+              <div
+                id="errorAlert"
+                class="alert alert-danger d-none"
+                role="alert"
+              >
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span id="errorMessage"></span>
+              </div>
+
+              <div id="loadingSpinner" class="text-center d-none">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
                 </div>
+                <p class="mt-2">Signing you in...</p>
+              </div>
+
+              <form id="loginForm">
+                <div class="mb-3">
+                  <label class="form-label">Email</label>
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="email"
+                    required
+                    placeholder="Enter your email"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Password</label>
+                  <input
+                    type="password"
+                    class="form-control"
+                    id="password"
+                    required
+                    placeholder="Enter your password"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  class="btn btn-primary w-100"
+                  id="loginBtn"
+                >
+                  <i class="fas fa-sign-in-alt me-2"></i>Login
+                </button>
+              </form>
+
+              <div class="text-center mt-4">
+                <hr />
+                <p class="mb-2">
+                  Don't have an account?
+                  <a href="signup.html" class="text-primary">Sign up</a>
+                </p>
+                <a href="index.html" class="text-muted">
+                  <i class="fas fa-arrow-left me-1"></i>Back to Shop
+                </a>
+              </div>
+
+              <div class="mt-4 p-3 bg-light rounded">
+                <small class="text-muted">
+                  <strong>Demo Accounts:</strong><br />
+                  <button
+                    type="button"
+                    class="btn btn-link btn-sm p-0"
+                    onclick="fillAdmin()"
+                  >
+                    👑 Admin: admin@shopzone.com / admin123</button
+                  ><br />
+                  <button
+                    type="button"
+                    class="btn btn-link btn-sm p-0"
+                    onclick="fillCustomer()"
+                  >
+                    👤 Customer: customer@shopzone.com / customer123
+                  </button>
+                </small>
+              </div>
             </div>
+          </div>
         </div>
+      </div>
     </div>
-    
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
-        function showError(message) {
-            const errorAlert = document.getElementById('errorAlert');
-            const errorMessage = document.getElementById('errorMessage');
-            errorMessage.textContent = message;
-            errorAlert.classList.remove('d-none');
-            
-            setTimeout(() => {
-                errorAlert.classList.add('d-none');
-            }, 5000);
+      function showError(message) {
+        const errorAlert = document.getElementById("errorAlert");
+        const errorMessage = document.getElementById("errorMessage");
+        errorMessage.textContent = message;
+        errorAlert.classList.remove("d-none");
+
+        setTimeout(() => {
+          errorAlert.classList.add("d-none");
+        }, 5000);
+      }
+
+      function showLoading(show) {
+        const spinner = document.getElementById("loadingSpinner");
+        const form = document.getElementById("loginForm");
+        const btn = document.getElementById("loginBtn");
+
+        if (show) {
+          spinner.classList.remove("d-none");
+          form.style.opacity = "0.5";
+          btn.disabled = true;
+          btn.innerHTML =
+            '<i class="fas fa-spinner fa-spin me-2"></i>Signing in...';
+        } else {
+          spinner.classList.add("d-none");
+          form.style.opacity = "1";
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Login';
         }
-        
-        function showLoading(show) {
-            const spinner = document.getElementById('loadingSpinner');
-            const form = document.getElementById('loginForm');
-            const btn = document.getElementById('loginBtn');
-            
-            if (show) {
-                spinner.classList.remove('d-none');
-                form.style.opacity = '0.5';
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Signing in...';
-            } else {
-                spinner.classList.add('d-none');
-                form.style.opacity = '1';
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Login';
-            }
-        }
-        
-        function fillAdmin() {
-            document.getElementById('email').value = 'admin@shopzone.com';
-            document.getElementById('password').value = 'admin123';
-        }
-        
-        function fillCustomer() {
-            document.getElementById('email').value = 'customer@shopzone.com';
-            document.getElementById('password').value = 'customer123';
-        }
-        
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            
-            if (!email || !password) {
-                showError('Please fill in all fields');
-                return;
-            }
-            
-            if (!email.includes('@')) {
-                showError('Please enter a valid email address');
-                return;
-            }
-            
-            showLoading(true);
-            
-            try {
-                console.log('🔄 Attempting login for:', email);
-                
-                const response = await fetch('/graphql', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        query: `
-                            mutation Login($email: String!, $password: String!) {
-                                login(email: $email, password: $password) {
-                                    token
-                                    user {
-                                        id
-                                        firstName
-                                        lastName
-                                        email
-                                        role
-                                    }
-                                }
+      }
+
+      function fillAdmin() {
+        document.getElementById("email").value = "admin@shopzone.com";
+        document.getElementById("password").value = "admin123";
+      }
+
+      function fillCustomer() {
+        document.getElementById("email").value = "customer@shopzone.com";
+        document.getElementById("password").value = "customer123";
+      }
+
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const email = document.getElementById("email").value.trim();
+          const password = document.getElementById("password").value;
+
+          if (!email || !password) {
+            showError("Please fill in all fields");
+            return;
+          }
+
+          showLoading(true);
+
+          try {
+            console.log("🔄 Attempting login for:", email);
+
+            const response = await fetch("/graphql", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                query: `
+                    mutation LoginUser($email: String!, $password: String!) {
+                        login(email: $email, password: $password) {
+                            token
+                            user {
+                                id
+                                firstName
+                                lastName
+                                email
+                                role
                             }
-                        `,
-                        variables: { email, password }
-                    })
-                });
-                
-                console.log('📡 Response status:', response.status);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const contentType = response.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    const text = await response.text();
-                    console.error('❌ Non-JSON response:', text);
-                    throw new Error("Server returned non-JSON response");
-                }
-                
-                const data = await response.json();
-                console.log('📦 Response data:', data);
-                
-                if (data.errors) {
-                    console.error('❌ GraphQL errors:', data.errors);
-                    throw new Error(data.errors[0].message);
-                }
-                
-                if (data.data?.login) {
-                    const { token, user } = data.data.login;
-                    console.log('✅ Login successful for user:', user.email);
-                    
-                    // Store authentication data
-                    localStorage.setItem('authToken', token);
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    
-                    // Show success message
-                    const successAlert = document.createElement('div');
-                    successAlert.className = 'alert alert-success';
-                    successAlert.innerHTML = '<i class="fas fa-check-circle me-2"></i>Login successful! Redirecting...';
-                    document.querySelector('.card-body').insertBefore(successAlert, document.getElementById('loginForm'));
-                    
-                    // Redirect based on user role
-                    setTimeout(() => {
-                        if (user.role === 'admin') {
-                            window.location.href = 'admin.html';
-                        } else {
-                            window.location.href = 'index.html';
                         }
-                    }, 1000);
-                } else {
-                    console.error('❌ No login data in response');
-                    throw new Error('Login failed: Invalid response from server');
-                }
-                
-            } catch (error) {
-                console.error('❌ Login error:', error);
-                showError(error.message || 'Login failed. Please try again.');
-            } finally {
-                showLoading(false);
+                    }
+                `,
+                variables: { email, password },
+              }),
+            });
+
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: Server error`);
             }
+
+            const data = await response.json();
+            console.log("📦 Response data:", data);
+
+            if (data.errors) {
+              throw new Error(data.errors[0].message);
+            }
+
+            if (data.data?.login) {
+              const { token, user } = data.data.login;
+
+              // Store authentication data
+              localStorage.setItem("authToken", token);
+              localStorage.setItem("currentUser", JSON.stringify(user));
+
+              // Show success message
+              const successAlert = document.createElement("div");
+              successAlert.className = "alert alert-success";
+              successAlert.innerHTML =
+                '<i class="fas fa-check-circle me-2"></i>Login successful! Redirecting...';
+              document
+                .querySelector(".card-body")
+                .insertBefore(
+                  successAlert,
+                  document.getElementById("loginForm")
+                );
+
+              // Redirect based on user role
+              setTimeout(() => {
+                if (user.role === "admin") {
+                  window.location.href = "admin.html";
+                } else {
+                  window.location.href = "index.html";
+                }
+              }, 1500);
+            } else {
+              throw new Error("Login failed: Invalid response from server");
+            }
+          } catch (error) {
+            console.error("❌ Login error:", error);
+            showError(error.message || "Login failed. Please try again.");
+          } finally {
+            showLoading(false);
+          }
         });
     </script>
-</body>
+  </body>
 </html>

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout - ShopZone</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link href="style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">
+          <i class="fas fa-shopping-bag me-2"></i>ShopZone
+        </a>
+        <div class="navbar-nav ms-auto flex-row">
+          <a class="nav-link me-3" href="index.html">
+            <i class="fas fa-home me-1"></i>Home
+          </a>
+          <a class="nav-link me-3" href="cart.html">
+            <i class="fas fa-shopping-cart me-1"></i>Cart
+          </a>
+          <a class="nav-link" href="login.html" id="authLink">
+            <i class="fas fa-user me-1"></i>Login
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mt-4">
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="card">
+            <div class="card-header">
+              <h4><i class="fas fa-credit-card me-2"></i>Checkout</h4>
+            </div>
+            <div class="card-body">
+              <!-- Order Summary -->
+              <div id="orderSummary" class="mb-4"></div>
+
+              <hr />
+
+              <!-- Payment Method Selection -->
+              <h5 class="mb-3">
+                <i class="fas fa-wallet me-2"></i>Select Payment Method
+              </h5>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <div
+                    class="payment-option"
+                    onclick="selectPayment('phonepe')"
+                  >
+                    <i class="fas fa-mobile-alt text-primary"></i>
+                    <span>PhonePe</span>
+                    <small class="text-muted d-block">Pay with PhonePe</small>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <div class="payment-option" onclick="selectPayment('gpay')">
+                    <i class="fab fa-google-pay text-success"></i>
+                    <span>Google Pay</span>
+                    <small class="text-muted d-block"
+                      >Pay with Google Pay</small
+                    >
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <div class="payment-option" onclick="selectPayment('paytm')">
+                    <i class="fas fa-wallet text-info"></i>
+                    <span>Paytm</span>
+                    <small class="text-muted d-block"
+                      >Pay with Paytm Wallet</small
+                    >
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <div class="payment-option" onclick="selectPayment('upi')">
+                    <i class="fas fa-qrcode text-warning"></i>
+                    <span>UPI QR Code</span>
+                    <small class="text-muted d-block"
+                      >Scan QR with any UPI app</small
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Payment Details -->
+              <div id="paymentDetails" style="display: none" class="mt-4">
+                <div class="alert alert-info">
+                  <h6>
+                    <i class="fas fa-info-circle me-2"></i>Payment Instructions:
+                  </h6>
+                  <p id="paymentInstructions"></p>
+                  <div
+                    id="qrCode"
+                    class="text-center mt-3"
+                    style="display: none"
+                  >
+                    <div class="qr-container">
+                      <img
+                        id="qrImage"
+                        src=""
+                        alt="UPI QR Code"
+                        class="img-fluid"
+                      />
+                      <p class="mt-2">
+                        <strong>UPI ID:</strong>
+                        <span id="upiId">merchant@shopzone</span>
+                      </p>
+                      <p class="text-muted">
+                        Scan this QR code with any UPI app to pay
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  class="btn btn-success w-100 btn-lg"
+                  onclick="processPayment()"
+                >
+                  <i class="fas fa-check me-2"></i>Complete Payment of ₹<span
+                    id="paymentAmount"
+                    >0.00</span
+                  >
+                </button>
+              </div>
+
+              <!-- Back to Cart -->
+              <div class="text-center mt-3">
+                <a href="cart.html" class="btn btn-outline-secondary">
+                  <i class="fas fa-arrow-left me-2"></i>Back to Cart
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+      let selectedPaymentMethod = null;
+      let orderTotal = 0;
+      let checkoutData = null;
+
+      document.addEventListener("DOMContentLoaded", function () {
+        loadOrderSummary();
+        updateAuthLinks();
+      });
+
+      function loadOrderSummary() {
+        checkoutData = JSON.parse(localStorage.getItem("checkoutData") || "{}");
+
+        if (!checkoutData.items || checkoutData.items.length === 0) {
+          alert("No items in checkout. Redirecting to cart...");
+          window.location.href = "cart.html";
+          return;
+        }
+
+        orderTotal =
+          checkoutData.total ||
+          checkoutData.subtotal + checkoutData.tax + checkoutData.shipping;
+
+        document.getElementById("orderSummary").innerHTML = `
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title"><i class="fas fa-list me-2"></i>Order Summary</h6>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-2">
+                                    <strong>Items (${
+                                      checkoutData.items.length
+                                    }):</strong>
+                                </div>
+                                ${checkoutData.items
+                                  .map(
+                                    (item) => `
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="text-muted">${
+                                          item.name
+                                        } × ${item.quantity}</span>
+                                        <span>₹${(
+                                          parseFloat(item.price) * item.quantity
+                                        ).toFixed(2)}</span>
+                                    </div>
+                                `
+                                  )
+                                  .join("")}
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Subtotal:</span>
+                                    <span>₹${checkoutData.subtotal.toFixed(
+                                      2
+                                    )}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Tax (8.5%):</span>
+                                    <span>₹${checkoutData.tax.toFixed(2)}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Shipping:</span>
+                                    <span>${
+                                      checkoutData.shipping === 0
+                                        ? "FREE"
+                                        : "₹" + checkoutData.shipping.toFixed(2)
+                                    }</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <strong>Total:</strong>
+                                    <strong class="text-primary">₹${orderTotal.toFixed(
+                                      2
+                                    )}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+      }
+
+      function selectPayment(method) {
+        selectedPaymentMethod = method;
+
+        // Remove selected class from all options
+        document.querySelectorAll(".payment-option").forEach((el) => {
+          el.classList.remove("selected");
+        });
+
+        // Add selected class to clicked option
+        event.target.closest(".payment-option").classList.add("selected");
+
+        const instructions = {
+          phonepe:
+            "Open PhonePe app and scan the QR code below or use the UPI ID to complete the payment.",
+          gpay: "Open Google Pay app and scan the QR code below or search for the UPI ID to complete the payment.",
+          paytm:
+            "Open Paytm app and scan the QR code below or use the UPI ID in the payments section.",
+          upi: "Use any UPI-enabled app (PhonePe, Google Pay, Paytm, BHIM, etc.) to scan this QR code.",
+        };
+
+        const upiIds = {
+          phonepe: "merchant@phonepe",
+          gpay: "merchant@gpay",
+          paytm: "merchant@paytm",
+          upi: "merchant@shopzone",
+        };
+
+        // Generate QR code with proper UPI format
+        const upiString = `upi://pay?pa=${
+          upiIds[method]
+        }&pn=ShopZone&am=${orderTotal.toFixed(2)}&cu=INR&tn=ShopZone Purchase`;
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
+          upiString
+        )}`;
+
+        document.getElementById("paymentInstructions").textContent =
+          instructions[method];
+        document.getElementById("upiId").textContent = upiIds[method];
+        document.getElementById("qrImage").src = qrCodeUrl;
+        document.getElementById("paymentAmount").textContent =
+          orderTotal.toFixed(2);
+
+        document.getElementById("paymentDetails").style.display = "block";
+        document.getElementById("qrCode").style.display = "block";
+
+        // Smooth scroll to payment details
+        document
+          .getElementById("paymentDetails")
+          .scrollIntoView({ behavior: "smooth" });
+      }
+
+      function processPayment() {
+        if (!selectedPaymentMethod) {
+          alert("Please select a payment method first");
+          return;
+        }
+
+        // Show loading state
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML =
+          '<i class="fas fa-spinner fa-spin me-2"></i>Processing Payment...';
+
+        // Simulate payment processing (3 seconds)
+        setTimeout(() => {
+          // Show success message
+          const successModal = `
+                    <div class="modal fade" id="successModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-success text-white">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-check-circle me-2"></i>Payment Successful!
+                                    </h5>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <div class="mb-3">
+                                        <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                                    </div>
+                                    <h4>Thank you for your purchase!</h4>
+                                    <p class="text-muted">Payment of ₹${orderTotal.toFixed(
+                                      2
+                                    )} completed successfully via ${selectedPaymentMethod.toUpperCase()}</p>
+                                    <div class="alert alert-info">
+                                        <strong>Order ID:</strong> #${Date.now()
+                                          .toString()
+                                          .slice(-8)}
+                                        <br>
+                                        <strong>Transaction ID:</strong> TXN${Date.now()}
+                                    </div>
+                                    <p>You will receive a confirmation email shortly.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary" onclick="completeOrder()">
+                                        Continue Shopping
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+          document.body.insertAdjacentHTML("beforeend", successModal);
+          const modal = new bootstrap.Modal(
+            document.getElementById("successModal")
+          );
+          modal.show();
+        }, 3000);
+      }
+
+      function completeOrder() {
+        // Clear cart and checkout data
+        localStorage.removeItem("cart");
+        localStorage.removeItem("checkoutData");
+
+        // Redirect to home page
+        window.location.href = "index.html";
+      }
+
+      function updateAuthLinks() {
+        const authLink = document.getElementById("authLink");
+        const currentUser = JSON.parse(
+          localStorage.getItem("currentUser") || "null"
+        );
+
+        if (authLink) {
+          if (currentUser) {
+            authLink.innerHTML = '<i class="fas fa-user me-1"></i>Account';
+            authLink.href = "admin.html";
+          } else {
+            authLink.innerHTML = '<i class="fas fa-user me-1"></i>Login';
+            authLink.href = "login.html";
+          }
+        }
+      }
+    </script>
+
+    <style>
+      .payment-option {
+        border: 2px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+      }
+
+      .payment-option:hover {
+        border-color: #3b82f6;
+        background-color: #f8fafc;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+      }
+
+      .payment-option.selected {
+        border-color: #3b82f6;
+        background-color: #dbeafe;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+      }
+
+      .payment-option i {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 0.75rem;
+      }
+
+      .payment-option span {
+        font-weight: 600;
+        font-size: 1.1rem;
+        display: block;
+        margin-bottom: 0.25rem;
+      }
+
+      .qr-container {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid #e5e7eb;
+        display: inline-block;
+      }
+
+      .qr-container img {
+        max-width: 250px;
+        height: auto;
+      }
+
+      #paymentDetails {
+        animation: slideDown 0.3s ease;
+      }
+
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .card {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-lg {
+        padding: 1rem 2rem;
+        font-size: 1.125rem;
+      }
+    </style>
+  </body>
+</html>
