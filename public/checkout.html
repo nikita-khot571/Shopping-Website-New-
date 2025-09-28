@@ -1,443 +1,676 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - ShopZone</title>
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-      rel="stylesheet"
-    />
-    <link href="style.css" rel="stylesheet" />
-  </head>
-  <body>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">
-          <i class="fas fa-shopping-bag me-2"></i>ShopZone
-        </a>
-        <div class="navbar-nav ms-auto flex-row">
-          <a class="nav-link me-3" href="index.html">
-            <i class="fas fa-home me-1"></i>Home
-          </a>
-          <a class="nav-link me-3" href="cart.html">
-            <i class="fas fa-shopping-cart me-1"></i>Cart
-          </a>
-          <a class="nav-link" href="login.html" id="authLink">
-            <i class="fas fa-user me-1"></i>Login
-          </a>
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-shopping-bag me-2"></i>ShopZone
+            </a>
+            <div class="navbar-nav ms-auto flex-row">
+                <a class="nav-link me-3" href="index.html">
+                    <i class="fas fa-home me-1"></i>Home
+                </a>
+                <a class="nav-link me-3" href="cart.html">
+                    <i class="fas fa-shopping-cart me-1"></i>Cart
+                </a>
+                <a class="nav-link" href="login.html" id="authLink">
+                    <i class="fas fa-user me-1"></i>Login
+                </a>
+            </div>
         </div>
-      </div>
     </nav>
 
     <div class="container mt-4">
-      <div class="row justify-content-center">
-        <div class="col-lg-8">
-          <div class="card">
-            <div class="card-header">
-              <h4><i class="fas fa-credit-card me-2"></i>Checkout</h4>
-            </div>
-            <div class="card-body">
-              <!-- Order Summary -->
-              <div id="orderSummary" class="mb-4"></div>
-
-              <hr />
-
-              <!-- Payment Method Selection -->
-              <h5 class="mb-3">
-                <i class="fas fa-wallet me-2"></i>Select Payment Method
-              </h5>
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <div
-                    class="payment-option"
-                    onclick="selectPayment('phonepe')"
-                  >
-                    <i class="fas fa-mobile-alt text-primary"></i>
-                    <span>PhonePe</span>
-                    <small class="text-muted d-block">Pay with PhonePe</small>
-                  </div>
-                </div>
-                <div class="col-md-6 mb-3">
-                  <div class="payment-option" onclick="selectPayment('gpay')">
-                    <i class="fab fa-google-pay text-success"></i>
-                    <span>Google Pay</span>
-                    <small class="text-muted d-block"
-                      >Pay with Google Pay</small
-                    >
-                  </div>
-                </div>
-                <div class="col-md-6 mb-3">
-                  <div class="payment-option" onclick="selectPayment('paytm')">
-                    <i class="fas fa-wallet text-info"></i>
-                    <span>Paytm</span>
-                    <small class="text-muted d-block"
-                      >Pay with Paytm Wallet</small
-                    >
-                  </div>
-                </div>
-                <div class="col-md-6 mb-3">
-                  <div class="payment-option" onclick="selectPayment('upi')">
-                    <i class="fas fa-qrcode text-warning"></i>
-                    <span>UPI QR Code</span>
-                    <small class="text-muted d-block"
-                      >Scan QR with any UPI app</small
-                    >
-                  </div>
-                </div>
-              </div>
-
-              <!-- Payment Details -->
-              <div id="paymentDetails" style="display: none" class="mt-4">
-                <div class="alert alert-info">
-                  <h6>
-                    <i class="fas fa-info-circle me-2"></i>Payment Instructions:
-                  </h6>
-                  <p id="paymentInstructions"></p>
-                  <div
-                    id="qrCode"
-                    class="text-center mt-3"
-                    style="display: none"
-                  >
-                    <div class="qr-container">
-                      <img
-                        id="qrImage"
-                        src=""
-                        alt="UPI QR Code"
-                        class="img-fluid"
-                      />
-                      <p class="mt-2">
-                        <strong>UPI ID:</strong>
-                        <span id="upiId">merchant@shopzone</span>
-                      </p>
-                      <p class="text-muted">
-                        Scan this QR code with any UPI app to pay
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  class="btn btn-success w-100 btn-lg"
-                  onclick="processPayment()"
-                >
-                  <i class="fas fa-check me-2"></i>Complete Payment of ₹<span
-                    id="paymentAmount"
-                    >0.00</span
-                  >
-                </button>
-              </div>
-
-              <!-- Back to Cart -->
-              <div class="text-center mt-3">
-                <a href="cart.html" class="btn btn-outline-secondary">
-                  <i class="fas fa-arrow-left me-2"></i>Back to Cart
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script>
-      let selectedPaymentMethod = null;
-      let orderTotal = 0;
-      let checkoutData = null;
-
-      document.addEventListener("DOMContentLoaded", function () {
-        loadOrderSummary();
-        updateAuthLinks();
-      });
-
-      function loadOrderSummary() {
-        checkoutData = JSON.parse(localStorage.getItem("checkoutData") || "{}");
-
-        if (!checkoutData.items || checkoutData.items.length === 0) {
-          alert("No items in checkout. Redirecting to cart...");
-          window.location.href = "cart.html";
-          return;
-        }
-
-        orderTotal =
-          checkoutData.total ||
-          checkoutData.subtotal + checkoutData.tax + checkoutData.shipping;
-
-        document.getElementById("orderSummary").innerHTML = `
-                <div class="card bg-light">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Checkout Steps -->
+                <div class="card mb-4">
                     <div class="card-body">
-                        <h6 class="card-title"><i class="fas fa-list me-2"></i>Order Summary</h6>
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="mb-2">
-                                    <strong>Items (${
-                                      checkoutData.items.length
-                                    }):</strong>
-                                </div>
-                                ${checkoutData.items
-                                  .map(
-                                    (item) => `
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <span class="text-muted">${
-                                          item.name
-                                        } × ${item.quantity}</span>
-                                        <span>₹${(
-                                          parseFloat(item.price) * item.quantity
-                                        ).toFixed(2)}</span>
-                                    </div>
-                                `
-                                  )
-                                  .join("")}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="step active">
+                                <span class="step-number">1</span>
+                                <span class="step-text">Shipping</span>
                             </div>
-                            <div class="col-md-4">
-                                <div class="d-flex justify-content-between mb-1">
-                                    <span>Subtotal:</span>
-                                    <span>₹${checkoutData.subtotal.toFixed(
-                                      2
-                                    )}</span>
-                                </div>
-                                <div class="d-flex justify-content-between mb-1">
-                                    <span>Tax (8.5%):</span>
-                                    <span>₹${checkoutData.tax.toFixed(2)}</span>
-                                </div>
-                                <div class="d-flex justify-content-between mb-1">
-                                    <span>Shipping:</span>
-                                    <span>${
-                                      checkoutData.shipping === 0
-                                        ? "FREE"
-                                        : "₹" + checkoutData.shipping.toFixed(2)
-                                    }</span>
-                                </div>
-                                <hr>
-                                <div class="d-flex justify-content-between">
-                                    <strong>Total:</strong>
-                                    <strong class="text-primary">₹${orderTotal.toFixed(
-                                      2
-                                    )}</strong>
-                                </div>
+                            <div class="step">
+                                <span class="step-number">2</span>
+                                <span class="step-text">Payment</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">3</span>
+                                <span class="step-text">Review</span>
                             </div>
                         </div>
                     </div>
                 </div>
-            `;
-      }
 
-      function selectPayment(method) {
-        selectedPaymentMethod = method;
-
-        // Remove selected class from all options
-        document.querySelectorAll(".payment-option").forEach((el) => {
-          el.classList.remove("selected");
-        });
-
-        // Add selected class to clicked option
-        event.target.closest(".payment-option").classList.add("selected");
-
-        const instructions = {
-          phonepe:
-            "Open PhonePe app and scan the QR code below or use the UPI ID to complete the payment.",
-          gpay: "Open Google Pay app and scan the QR code below or search for the UPI ID to complete the payment.",
-          paytm:
-            "Open Paytm app and scan the QR code below or use the UPI ID in the payments section.",
-          upi: "Use any UPI-enabled app (PhonePe, Google Pay, Paytm, BHIM, etc.) to scan this QR code.",
-        };
-
-        const upiIds = {
-          phonepe: "merchant@phonepe",
-          gpay: "merchant@gpay",
-          paytm: "merchant@paytm",
-          upi: "merchant@shopzone",
-        };
-
-        // Generate QR code with proper UPI format
-        const upiString = `upi://pay?pa=${
-          upiIds[method]
-        }&pn=ShopZone&am=${orderTotal.toFixed(2)}&cu=INR&tn=ShopZone Purchase`;
-        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
-          upiString
-        )}`;
-
-        document.getElementById("paymentInstructions").textContent =
-          instructions[method];
-        document.getElementById("upiId").textContent = upiIds[method];
-        document.getElementById("qrImage").src = qrCodeUrl;
-        document.getElementById("paymentAmount").textContent =
-          orderTotal.toFixed(2);
-
-        document.getElementById("paymentDetails").style.display = "block";
-        document.getElementById("qrCode").style.display = "block";
-
-        // Smooth scroll to payment details
-        document
-          .getElementById("paymentDetails")
-          .scrollIntoView({ behavior: "smooth" });
-      }
-
-      function processPayment() {
-        if (!selectedPaymentMethod) {
-          alert("Please select a payment method first");
-          return;
-        }
-
-        // Show loading state
-        const btn = event.target;
-        const originalText = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML =
-          '<i class="fas fa-spinner fa-spin me-2"></i>Processing Payment...';
-
-        // Simulate payment processing (3 seconds)
-        setTimeout(() => {
-          // Show success message
-          const successModal = `
-                    <div class="modal fade" id="successModal" tabindex="-1">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header bg-success text-white">
-                                    <h5 class="modal-title">
-                                        <i class="fas fa-check-circle me-2"></i>Payment Successful!
-                                    </h5>
-                                </div>
-                                <div class="modal-body text-center">
-                                    <div class="mb-3">
-                                        <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                <!-- Checkout Form -->
+                <form id="checkoutForm">
+                    <!-- Shipping Information -->
+                    <div id="shippingStep" class="checkout-step">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5><i class="fas fa-truck me-2"></i>Shipping Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">First Name</label>
+                                        <input type="text" class="form-control" id="shippingFirstName" required>
                                     </div>
-                                    <h4>Thank you for your purchase!</h4>
-                                    <p class="text-muted">Payment of ₹${orderTotal.toFixed(
-                                      2
-                                    )} completed successfully via ${selectedPaymentMethod.toUpperCase()}</p>
-                                    <div class="alert alert-info">
-                                        <strong>Order ID:</strong> #${Date.now()
-                                          .toString()
-                                          .slice(-8)}
-                                        <br>
-                                        <strong>Transaction ID:</strong> TXN${Date.now()}
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Last Name</label>
+                                        <input type="text" class="form-control" id="shippingLastName" required>
                                     </div>
-                                    <p>You will receive a confirmation email shortly.</p>
                                 </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-primary" onclick="completeOrder()">
-                                        Continue Shopping
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="shippingEmail" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Phone</label>
+                                    <input type="tel" class="form-control" id="shippingPhone" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Address</label>
+                                    <input type="text" class="form-control" id="shippingAddress" required>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">City</label>
+                                        <input type="text" class="form-control" id="shippingCity" required>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">State</label>
+                                        <input type="text" class="form-control" id="shippingState" required>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">ZIP Code</label>
+                                        <input type="text" class="form-control" id="shippingZip" required>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button type="button" class="btn btn-primary" onclick="nextStep()">
+                                        Continue to Payment <i class="fas fa-arrow-right ms-2"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                `;
 
-          document.body.insertAdjacentHTML("beforeend", successModal);
-          const modal = new bootstrap.Modal(
-            document.getElementById("successModal")
-          );
-          modal.show();
-        }, 3000);
-      }
+                    <!-- Payment Information -->
+                    <div id="paymentStep" class="checkout-step" style="display: none;">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5><i class="fas fa-credit-card me-2"></i>Payment Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Method</label>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="creditCard" value="credit_card" checked>
+                                        <label class="form-check-label" for="creditCard">
+                                            <i class="fas fa-credit-card me-2"></i>Credit Card
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="debitCard" value="debit_card">
+                                        <label class="form-check-label" for="debitCard">
+                                            <i class="fas fa-credit-card me-2"></i>Debit Card
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="upi" value="upi">
+                                        <label class="form-check-label" for="upi">
+                                            <i class="fas fa-mobile-alt me-2"></i>UPI
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="cod">
+                                        <label class="form-check-label" for="cod">
+                                            <i class="fas fa-money-bill-wave me-2"></i>Cash on Delivery
+                                        </label>
+                                    </div>
+                                </div>
 
-      function completeOrder() {
-        // Clear cart and checkout data
-        localStorage.removeItem("cart");
-        localStorage.removeItem("checkoutData");
+                                <div id="cardDetails">
+                                    <div class="mb-3">
+                                        <label class="form-label">Card Number</label>
+                                        <input type="text" class="form-control" id="cardNumber" placeholder="1234 5678 9012 3456">
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Expiry Date</label>
+                                            <input type="text" class="form-control" id="expiryDate" placeholder="MM/YY">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">CVV</label>
+                                            <input type="text" class="form-control" id="cvv" placeholder="123">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Cardholder Name</label>
+                                        <input type="text" class="form-control" id="cardholderName">
+                                    </div>
+                                </div>
 
-        // Redirect to home page
-        window.location.href = "index.html";
-      }
+                                <div id="upiDetails" style="display: none;">
+                                    <div class="mb-3">
+                                        <label class="form-label">UPI ID</label>
+                                        <input type="text" class="form-control" id="upiId" placeholder="username@upi">
+                                    </div>
+                                </div>
 
-      function updateAuthLinks() {
-        const authLink = document.getElementById("authLink");
-        const currentUser = JSON.parse(
-          localStorage.getItem("currentUser") || "null"
-        );
+                                <div class="d-flex justify-content-between">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="previousStep()">
+                                        <i class="fas fa-arrow-left me-2"></i>Back to Shipping
+                                    </button>
+                                    <button type="button" class="btn btn-primary" onclick="nextStep()">
+                                        Review Order <i class="fas fa-arrow-right ms-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-        if (authLink) {
-          if (currentUser) {
-            authLink.innerHTML = '<i class="fas fa-user me-1"></i>Account';
-            authLink.href = "admin.html";
-          } else {
-            authLink.innerHTML = '<i class="fas fa-user me-1"></i>Login';
-            authLink.href = "login.html";
-          }
+                    <!-- Order Review -->
+                    <div id="reviewStep" class="checkout-step" style="display: none;">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5><i class="fas fa-check-circle me-2"></i>Order Review</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Shipping Address</h6>
+                                        <div id="reviewShipping" class="mb-3">
+                                            <!-- Shipping details will be populated here -->
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Payment Method</h6>
+                                        <div id="reviewPayment" class="mb-3">
+                                            <!-- Payment details will be populated here -->
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <h6>Order Items</h6>
+                                <div id="reviewItems" class="mb-4">
+                                    <!-- Order items will be populated here -->
+                                </div>
+
+                                <div class="d-flex justify-content-between">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="previousStep()">
+                                        <i class="fas fa-arrow-left me-2"></i>Back to Payment
+                                    </button>
+                                    <button type="submit" class="btn btn-success" id="placeOrderBtn">
+                                        <i class="fas fa-shopping-cart me-2"></i>Place Order
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Order Summary Sidebar -->
+            <div class="col-lg-4">
+                <div class="card sticky-top" style="top: 20px;">
+                    <div class="card-header">
+                        <h5>Order Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="orderSummaryItems">
+                            <!-- Order items will be loaded here -->
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span>₹<span id="summarySubtotal">0.00</span></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tax (8.5%):</span>
+                            <span>₹<span id="summaryTax">0.00</span></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Shipping:</span>
+                            <span id="summaryShipping">₹0.00</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <strong>Total:</strong>
+                            <strong class="text-primary">₹<span id="summaryTotal">0.00</span></strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Confirmation Modal -->
+    <div class="modal fade" id="orderConfirmationModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-5">
+                    <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 mb-3">Order Placed Successfully!</h4>
+                    <p class="text-muted mb-4">Thank you for your purchase. You will receive an email confirmation shortly.</p>
+                    <div class="mb-4">
+                        <strong>Order ID: <span id="confirmationOrderId">#12345</span></strong>
+                    </div>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="index.html" class="btn btn-primary">Continue Shopping</a>
+                        <a href="admin.html" class="btn btn-outline-primary">View Orders</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="graphql.js"></script>
+    
+    <script>
+        let currentStep = 1;
+        let checkoutData = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCheckoutData();
+            setupPaymentMethodChange();
+            setupCheckoutForm();
+            updateAuthLinks();
+        });
+
+        function loadCheckoutData() {
+            checkoutData = JSON.parse(localStorage.getItem('checkoutData') || '{}');
+            
+            if (!checkoutData.items || checkoutData.items.length === 0) {
+                alert('Your cart is empty. Redirecting to shop...');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            populateOrderSummary();
+            prefillUserData();
         }
-      }
+
+        function populateOrderSummary() {
+            const itemsContainer = document.getElementById('orderSummaryItems');
+            
+            itemsContainer.innerHTML = checkoutData.items.map(item => `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; border-radius: 5px;">
+                                <i class="fas fa-image text-muted"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">${item.name}</h6>
+                            <small class="text-muted">Qty: ${item.quantity}</small>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <span>₹${(parseFloat(item.price) * item.quantity).toFixed(2)}</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('summarySubtotal').textContent = checkoutData.subtotal.toFixed(2);
+            document.getElementById('summaryTax').textContent = checkoutData.tax.toFixed(2);
+            document.getElementById('summaryShipping').textContent = checkoutData.shipping === 0 ? 'FREE' : `₹${checkoutData.shipping.toFixed(2)}`;
+            document.getElementById('summaryTotal').textContent = checkoutData.total.toFixed(2);
+        }
+
+        function prefillUserData() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (currentUser.firstName) {
+                document.getElementById('shippingFirstName').value = currentUser.firstName;
+                document.getElementById('shippingLastName').value = currentUser.lastName;
+                document.getElementById('shippingEmail').value = currentUser.email;
+                document.getElementById('shippingPhone').value = currentUser.phone || '';
+            }
+        }
+
+        function setupPaymentMethodChange() {
+            const paymentMethods = document.querySelectorAll('input[name="paymentMethod"]');
+            paymentMethods.forEach(method => {
+                method.addEventListener('change', function() {
+                    const cardDetails = document.getElementById('cardDetails');
+                    const upiDetails = document.getElementById('upiDetails');
+                    
+                    if (this.value === 'upi') {
+                        cardDetails.style.display = 'none';
+                        upiDetails.style.display = 'block';
+                    } else if (this.value === 'cod') {
+                        cardDetails.style.display = 'none';
+                        upiDetails.style.display = 'none';
+                    } else {
+                        cardDetails.style.display = 'block';
+                        upiDetails.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        function setupCheckoutForm() {
+            document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await placeOrder();
+            });
+        }
+
+        function nextStep() {
+            if (currentStep === 1) {
+                if (!validateShippingForm()) return;
+                showStep(2);
+            } else if (currentStep === 2) {
+                if (!validatePaymentForm()) return;
+                populateReviewStep();
+                showStep(3);
+            }
+        }
+
+        function previousStep() {
+            if (currentStep === 2) {
+                showStep(1);
+            } else if (currentStep === 3) {
+                showStep(2);
+            }
+        }
+
+        function showStep(step) {
+            // Hide all steps
+            document.querySelectorAll('.checkout-step').forEach(stepEl => {
+                stepEl.style.display = 'none';
+            });
+            
+            // Update step indicators
+            document.querySelectorAll('.step').forEach((stepEl, index) => {
+                stepEl.classList.toggle('active', index + 1 <= step);
+            });
+            
+            // Show current step
+            const stepNames = ['', 'shipping', 'payment', 'review'];
+            document.getElementById(stepNames[step] + 'Step').style.display = 'block';
+            currentStep = step;
+        }
+
+        function validateShippingForm() {
+            const required = ['shippingFirstName', 'shippingLastName', 'shippingEmail', 'shippingPhone', 'shippingAddress', 'shippingCity', 'shippingState', 'shippingZip'];
+            
+            for (let field of required) {
+                const element = document.getElementById(field);
+                if (!element.value.trim()) {
+                    element.focus();
+                    showToast('Please fill in all shipping information', 'danger');
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        function validatePaymentForm() {
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            
+            if (paymentMethod === 'upi') {
+                const upiId = document.getElementById('upiId').value.trim();
+                if (!upiId || !upiId.includes('@')) {
+                    document.getElementById('upiId').focus();
+                    showToast('Please enter a valid UPI ID', 'danger');
+                    return false;
+                }
+            } else if (paymentMethod !== 'cod') {
+                const cardNumber = document.getElementById('cardNumber').value.trim();
+                const expiryDate = document.getElementById('expiryDate').value.trim();
+                const cvv = document.getElementById('cvv').value.trim();
+                
+                if (!cardNumber || !expiryDate || !cvv) {
+                    showToast('Please fill in all card details', 'danger');
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        function populateReviewStep() {
+            // Shipping address review
+            const shippingReview = `
+                ${document.getElementById('shippingFirstName').value} ${document.getElementById('shippingLastName').value}<br>
+                ${document.getElementById('shippingAddress').value}<br>
+                ${document.getElementById('shippingCity').value}, ${document.getElementById('shippingState').value} ${document.getElementById('shippingZip').value}<br>
+                Phone: ${document.getElementById('shippingPhone').value}<br>
+                Email: ${document.getElementById('shippingEmail').value}
+            `;
+            document.getElementById('reviewShipping').innerHTML = shippingReview;
+            
+            // Payment method review
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+            let paymentReview = '';
+            
+            switch (paymentMethod.value) {
+                case 'credit_card':
+                    paymentReview = `Credit Card ending in ${document.getElementById('cardNumber').value.slice(-4)}`;
+                    break;
+                case 'debit_card':
+                    paymentReview = `Debit Card ending in ${document.getElementById('cardNumber').value.slice(-4)}`;
+                    break;
+                case 'upi':
+                    paymentReview = `UPI: ${document.getElementById('upiId').value}`;
+                    break;
+                case 'cod':
+                    paymentReview = 'Cash on Delivery';
+                    break;
+            }
+            document.getElementById('reviewPayment').innerHTML = paymentReview;
+            
+            // Order items review
+            const itemsReview = checkoutData.items.map(item => `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <span>${item.name}</span>
+                        <small class="text-muted"> x ${item.quantity}</small>
+                    </div>
+                    <span>₹${(parseFloat(item.price) * item.quantity).toFixed(2)}</span>
+                </div>
+            `).join('');
+            document.getElementById('reviewItems').innerHTML = itemsReview;
+        }
+
+        async function placeOrder() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            
+            if (!currentUser.id) {
+                alert('Please login to place an order');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            const placeOrderBtn = document.getElementById('placeOrderBtn');
+            placeOrderBtn.disabled = true;
+            placeOrderBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Placing Order...';
+            
+            try {
+                // Prepare shipping address
+                const shippingAddress = {
+                    firstName: document.getElementById('shippingFirstName').value,
+                    lastName: document.getElementById('shippingLastName').value,
+                    email: document.getElementById('shippingEmail').value,
+                    phone: document.getElementById('shippingPhone').value,
+                    address: document.getElementById('shippingAddress').value,
+                    city: document.getElementById('shippingCity').value,
+                    state: document.getElementById('shippingState').value,
+                    zipCode: document.getElementById('shippingZip').value
+                };
+                
+                // Prepare payment method
+                const paymentMethodType = document.querySelector('input[name="paymentMethod"]:checked').value;
+                const paymentMethod = {
+                    type: paymentMethodType,
+                    ...(paymentMethodType === 'upi' ? { upiId: document.getElementById('upiId').value } : {}),
+                    ...(paymentMethodType !== 'cod' && paymentMethodType !== 'upi' ? {
+                        cardNumber: document.getElementById('cardNumber').value,
+                        expiryDate: document.getElementById('expiryDate').value,
+                        cvv: document.getElementById('cvv').value,
+                        cardholderName: document.getElementById('cardholderName').value
+                    } : {})
+                };
+                
+                const response = await fetch('/graphql', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify({
+                        query: `
+                            mutation CreateOrder($shippingAddress: String!, $paymentMethod: String!) {
+                                createOrder(shippingAddress: $shippingAddress, paymentMethod: $paymentMethod) {
+                                    id
+                                    total
+                                    status
+                                    createdAt
+                                }
+                            }
+                        `,
+                        variables: {
+                            shippingAddress: JSON.stringify(shippingAddress),
+                            paymentMethod: JSON.stringify(paymentMethod)
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.errors) {
+                    throw new Error(data.errors[0].message);
+                }
+                
+                const order = data.data.createOrder;
+                
+                // Show success modal
+                document.getElementById('confirmationOrderId').textContent = `#${order.id.slice(-8)}`;
+                const modal = new bootstrap.Modal(document.getElementById('orderConfirmationModal'));
+                modal.show();
+                
+                // Clear cart and checkout data
+                localStorage.removeItem('cart');
+                localStorage.removeItem('checkoutData');
+                
+                // Update cart count
+                if (window.shopZone) {
+                    window.shopZone.cart = [];
+                    window.shopZone.updateCartCount();
+                }
+                
+            } catch (error) {
+                console.error('Error placing order:', error);
+                showToast('Failed to place order: ' + error.message, 'danger');
+            } finally {
+                placeOrderBtn.disabled = false;
+                placeOrderBtn.innerHTML = '<i class="fas fa-shopping-cart me-2"></i>Place Order';
+            }
+        }
+
+        function updateAuthLinks() {
+            const authLink = document.getElementById('authLink');
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+            
+            if (authLink) {
+                if (currentUser) {
+                    authLink.innerHTML = '<i class="fas fa-user me-1"></i>Account';
+                    authLink.href = 'admin.html';
+                } else {
+                    authLink.innerHTML = '<i class="fas fa-user me-1"></i>Login';
+                    authLink.href = 'login.html';
+                }
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+
+            let toastContainer = document.querySelector('.toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                document.body.appendChild(toastContainer);
+            }
+
+            toastContainer.appendChild(toast);
+            const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+            bsToast.show();
+
+            toast.addEventListener('hidden.bs.toast', () => {
+                toast.remove();
+            });
+        }
     </script>
 
     <style>
-      .payment-option {
-        border: 2px solid #e5e7eb;
-        border-radius: 0.75rem;
-        padding: 1.5rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background: white;
-      }
-
-      .payment-option:hover {
-        border-color: #3b82f6;
-        background-color: #f8fafc;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-      }
-
-      .payment-option.selected {
-        border-color: #3b82f6;
-        background-color: #dbeafe;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
-      }
-
-      .payment-option i {
-        font-size: 2.5rem;
-        display: block;
-        margin-bottom: 0.75rem;
-      }
-
-      .payment-option span {
-        font-weight: 600;
-        font-size: 1.1rem;
-        display: block;
-        margin-bottom: 0.25rem;
-      }
-
-      .qr-container {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        border: 1px solid #e5e7eb;
-        display: inline-block;
-      }
-
-      .qr-container img {
-        max-width: 250px;
-        height: auto;
-      }
-
-      #paymentDetails {
-        animation: slideDown 0.3s ease;
-      }
-
-      @keyframes slideDown {
-        from {
-          opacity: 0;
-          transform: translateY(-20px);
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
         }
-        to {
-          opacity: 1;
-          transform: translateY(0);
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 8px;
         }
-      }
-
-      .card {
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      }
-
-      .btn-lg {
-        padding: 1rem 2rem;
-        font-size: 1.125rem;
-      }
+        
+        .step.active .step-number {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .step-text {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+        
+        .step.active .step-text {
+            color: #007bff;
+            font-weight: 600;
+        }
+        
+        .checkout-step {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
-  </body>
+</body>
 </html>

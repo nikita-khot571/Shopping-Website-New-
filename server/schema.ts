@@ -74,6 +74,7 @@ export const typeDefs = gql`
         cart: [CartItem!]!
         orders: [Order!]!
         users: [User!]! # For admin
+        allOrders: [Order!]! # For admin
     }
     
     type Mutation {
@@ -209,6 +210,29 @@ export const resolvers = {
             } catch (error) {
                 console.error('Error fetching users:', error);
                 throw new Error('Failed to fetch users');
+            }
+        },
+
+        allOrders: async (_: any, __: any, { req }: any) => {
+            const user = await getUser(req);
+            if (!user || user.role !== 'admin') {
+                throw new Error('Admin access required');
+            }
+            
+            try {
+                return Order.findAll({
+                    include: [
+                        { model: User },
+                        { 
+                            model: OrderItem, 
+                            include: [{ model: Product }]
+                        }
+                    ],
+                    order: [['createdAt', 'DESC']]
+                });
+            } catch (error) {
+                console.error('Error fetching all orders:', error);
+                throw new Error('Failed to fetch all orders');
             }
         }
     },
@@ -415,7 +439,8 @@ export const resolvers = {
                 // Calculate total - FIX: Access product properly
                 let total = 0;
                 for (const item of cartItems) {
-                    const product = item.productId || item.productId; // Handle both possible names
+                    // Fix: Access the product through the association
+                    const product = (item as any).Product;
                     if (product && product.price) {
                         total += parseFloat(product.price.toString()) * item.quantity;
                     }
@@ -438,7 +463,7 @@ export const resolvers = {
                 
                 // Create order items - FIX: Access product properly
                 for (const cartItem of cartItems) {
-                    const product = cartItem.productId || cartItem.productId;
+                    const product = (cartItem as any).Product;
                     if (product) {
                         await OrderItem.create({
                             orderId: order.id,
