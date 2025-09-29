@@ -1,20 +1,21 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "lib": ["ES2020", "DOM"],
-    "module": "Nodenext",
-    "moduleResolution": "Nodenext",
+    "lib": ["ES2020"],
+    "module": "commonjs",
+    "moduleResolution": "node",
     "outDir": "./dist",
     "rootDir": "./",
-    "strict": true,
+    "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "strictPropertyInitialization": false
+    "strictPropertyInitialization": false,
+    "noImplicitAny": false
   },
-  "include": ["server/**/*", "*.ts"],
+  "include": ["server/**/*"],
   "exclude": ["node_modules", "dist", "public"]
 }
