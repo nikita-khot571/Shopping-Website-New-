@@ -129,11 +129,14 @@
                                 <i class="fas fa-users me-2"></i>Users
                             </a>
                         </li>
+                        <!-- Analytics menu removed as per user request -->
+                        <!--
                         <li class="nav-item mb-1">
                             <a class="nav-link" href="#analytics" onclick="showSection('analytics', event)">
                                 <i class="fas fa-chart-bar me-2"></i>Analytics
                             </a>
                         </li>
+                        -->
                     </ul>
                 </div>
             </div>
@@ -482,6 +485,8 @@
                     </div>
                 </div>
 
+                <!-- Analytics section removed as per user request -->
+                <!--
                 <div id="analyticsSection" class="section-content" style="display: none;">
                     <h2 class="mb-4"><i class="fas fa-chart-bar me-2"></i>Analytics & Reports</h2>
                     
@@ -541,6 +546,7 @@
                         </div>
                     </div>
                 </div>
+                -->
             </div>
         </div>
     </div>
@@ -674,6 +680,7 @@
             }
             
             currentUser = user;
+            window.user = user; // Fix for ReferenceError: user is not defined in admin page scripts
             document.getElementById('adminName').textContent = `${user.firstName} ${user.lastName}`;
         }
 
@@ -1210,9 +1217,9 @@
             event.target.classList.add('active');
             
             // Load section-specific data
-            if (sectionName === 'analytics') {
-                loadAnalytics();
-            }
+            // if (sectionName === 'analytics') {
+            //     loadAnalytics();
+            // }
         }
 
         function showAddProductModal() {

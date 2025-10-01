@@ -1,8 +1,7 @@
 import { gql } from "apollo-server-express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { User, Product, Cart, Order, OrderItem } from "./database/setup";
-import { Op } from "sequelize";
+import { User, Product, Cart, Order, OrderItem } from "./database/operations";
 
 export const typeDefs = gql`
   type User {
@@ -96,6 +95,7 @@ export const typeDefs = gql`
     updateCartQuantity(productId: ID!, quantity: Int!): CartItem!
     removeFromCart(productId: ID!): Boolean!
     clearCart: Boolean!
+    logout: Boolean!
 
     createOrder(shippingAddress: String!, paymentMethod: String!): Order!
     updateOrderStatus(id: ID!, status: String!): Order!
@@ -149,22 +149,18 @@ export const resolvers = {
       { category, search, limit = 50, offset = 0 }: any
     ) => {
       try {
-        const where: any = {};
-        if (category && category !== "all") {
-          where.category = category;
-        }
-        if (search) {
-          where[Op.or] = [
-            { name: { [Op.like]: `%${search}%` } },
-            { description: { [Op.like]: `%${search}%` } },
-          ];
-        }
-
         const products = await Product.findAll({
-          where,
+          where: {
+            ...(category && category !== "all" ? { category } : {}),
+            ...(search
+              ? {
+                  name: (name: string) =>
+                    name.toLowerCase().includes(search.toLowerCase()),
+                }
+              : {}),
+          },
           limit: Math.min(limit, 100), // Cap at 100
           offset: Math.max(offset, 0),
-          order: [["createdAt", "DESC"]],
         });
 
         return products;
@@ -198,8 +194,6 @@ export const resolvers = {
       try {
         return Cart.findAll({
           where: { userId: user.id },
-          include: [{ model: Product }],
-          order: [["createdAt", "DESC"]],
         });
       } catch (error) {
         console.error("Error fetching cart:", error);
@@ -376,19 +370,15 @@ export const resolvers = {
 
         if (existingCartItem) {
           existingCartItem.quantity += quantity;
-          await existingCartItem.save();
-          return Cart.findByPk(existingCartItem.id, {
-            include: [{ model: Product }],
-          });
+          await Cart.save(existingCartItem);
+          return existingCartItem;
         } else {
           const cartItem = await Cart.create({
             userId: user.id,
             productId,
             quantity,
           });
-          return Cart.findByPk(cartItem.id, {
-            include: [{ model: Product }],
-          });
+          return cartItem;
         }
       } catch (error: any) {
         console.error("Add to cart error:", error);
@@ -412,16 +402,13 @@ export const resolvers = {
         if (!cartItem) throw new Error("Cart item not found");
 
         if (quantity <= 0) {
-          await cartItem.destroy();
+          await Cart.destroy({ where: { userId: user.id, productId } });
           return null;
         }
 
         cartItem.quantity = quantity;
-        await cartItem.save();
-
-        return Cart.findByPk(cartItem.id, {
-          include: [{ model: Product }],
-        });
+        await Cart.save(cartItem);
+        return cartItem;
       } catch (error: any) {
         console.error("Update cart error:", error);
         throw new Error(error.message || "Failed to update cart item");
@@ -433,13 +420,7 @@ export const resolvers = {
       if (!user) throw new Error("Not authenticated");
 
       try {
-        const cartItem = await Cart.findOne({
-          where: { userId: user.id, productId },
-        });
-
-        if (!cartItem) throw new Error("Cart item not found");
-
-        await cartItem.destroy();
+        await Cart.destroy({ where: { userId: user.id, productId } });
         return true;
       } catch (error: any) {
         console.error("Remove from cart error:", error);
@@ -457,6 +438,20 @@ export const resolvers = {
       } catch (error: any) {
         console.error("Clear cart error:", error);
         throw new Error("Failed to clear cart");
+      }
+    },
+
+    logout: async (_: any, __: any, { req }: any) => {
+      const user = await getUser(req);
+      if (!user) throw new Error("Not authenticated");
+
+      try {
+        const roleLabel = user.role === "admin" ? "Admin" : "User";
+        console.log(`✅ ${roleLabel} logged out: ${user.email}`);
+        return true;
+      } catch (error: any) {
+        console.error("Logout error:", error);
+        throw new Error("Failed to logout");
       }
     },
 
@@ -521,7 +516,7 @@ export const resolvers = {
 
             // Update stock
             product.stock -= cartItem.quantity;
-            await product.save();
+            await Product.save(product);
           }
         }
 
@@ -558,7 +553,7 @@ export const resolvers = {
         }
 
         order.status = status;
-        await order.save();
+        await Order.save(order);
 
         return Order.findByPk(order.id, {
           include: [
@@ -588,7 +583,13 @@ export const resolvers = {
         if (lastName) user.lastName = lastName.trim();
         if (phone !== undefined) user.phone = phone ? phone.trim() : null;
 
-        await user.save();
+        // Update user in database
+        const db = require('./database/setup').getDatabase();
+        const userIndex = db.users.findIndex((u: any) => u.id === user.id);
+        if (userIndex !== -1) {
+          db.users[userIndex] = { ...user, updatedAt: new Date().toISOString() };
+          require('./database/setup').saveToDatabase(db);
+        }
         return user;
       } catch (error: any) {
         console.error("Update profile error:", error);
@@ -647,7 +648,7 @@ export const resolvers = {
         if (image !== undefined) product.image = image || null;
         if (stock !== undefined) product.stock = stock;
 
-        await product.save();
+        await Product.save(product);
         return product;
       } catch (error: any) {
         console.error("Update product error:", error);
@@ -665,7 +666,7 @@ export const resolvers = {
         const product = await Product.findByPk(id);
         if (!product) throw new Error("Product not found");
 
-        await product.destroy();
+        await Product.destroy({ where: { id } });
         console.log("✅ Admin deleted product:", product.name);
         return true;
       } catch (error: any) {

@@ -15,11 +15,16 @@ class ShopZoneApp {
     try {
       // Load products using GraphQL
       await this.loadProducts();
+      this.renderCategories();
       this.renderProducts();
 
       // Load cart from backend if user is logged in
       if (this.currentUser && this.backendAvailable) {
         await this.loadCartFromBackend();
+      } else {
+        // Clear local cart if no user is logged in
+        this.cart = [];
+        localStorage.removeItem("cart");
       }
 
       this.updateCartCount();
@@ -28,11 +33,12 @@ class ShopZoneApp {
       console.error("Failed to initialize app:", error);
       this.showToast("Backend not available, using demo mode", "warning");
       this.loadMockProducts();
+      this.renderCategories();
     }
   }
   async checkBackendAvailability() {
     try {
-      const response = await fetch("http://localhost:4000/graphql", {
+      const response = await fetch("http://localhost:4001/graphql", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -145,18 +151,15 @@ class ShopZoneApp {
 
   async loadProducts() {
     try {
-      if (window.graphqlService) {
-        const data = await window.graphqlService.getProducts(
-          this.currentCategory !== "all" ? this.currentCategory : null,
-          this.searchQuery || null
-        );
-        this.products = data.products;
-        this.backendAvailable = true;
-      } else {
-        throw new Error("GraphQL service not available");
+      const response = await fetch('../db.json');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+      const data = await response.json();
+      this.products = data.products;
+      this.backendAvailable = true;
     } catch (error) {
-      console.log("GraphQL not available, using mock data:", error.message);
+      console.log("Failed to load products from db.json, using mock data:", error.message);
       this.backendAvailable = false;
       this.loadMockProducts();
     }
@@ -194,6 +197,24 @@ class ShopZoneApp {
         this.removeFromCart(productId);
       }
     });
+  }
+
+  renderCategories() {
+    const container = document.getElementById("categoryContainer");
+    if (!container) return;
+
+    // Get unique categories from products
+    const categories = ["all", ...new Set(this.products.map(product => product.category))];
+
+    container.innerHTML = categories
+      .map(
+        (category) => `
+            <button class="category-btn ${category === this.currentCategory ? 'active' : ''}" data-category="${category}" onclick="filterByCategory('${category}')">
+                ${category === "all" ? "All" : category.charAt(0).toUpperCase() + category.slice(1)}
+            </button>
+        `
+      )
+      .join("");
   }
 
   renderProducts() {
@@ -241,7 +262,7 @@ class ShopZoneApp {
             <div class="col-md-6 col-lg-4 col-xl-3">
                 <div class="card product-card h-100">
                     <div class="product-image">
-                        <i class="fas fa-image"></i>
+                        <img src="${product.image}" alt="${product.name}" class="img-fluid" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=No+Image';" />
                     </div>
                     <div class="product-info">
                         <div class="product-category">${product.category}</div>
@@ -260,6 +281,42 @@ class ShopZoneApp {
         `
       )
       .join("");
+  }
+
+
+
+  async logout() {
+    // Clear backend cart if user is logged in
+    if (this.currentUser && this.backendAvailable && window.graphqlService) {
+      try {
+        await window.graphqlService.clearCart(this.currentUser.id);
+      } catch (error) {
+        console.error("Failed to clear cart on logout:", error);
+        // Continue with logout even if cart clearing fails
+      }
+    }
+
+    // Clear local cart
+    this.cart = [];
+    localStorage.removeItem("cart");
+
+    // Clear auth data from localStorage and GraphQL service
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("currentUser");
+    this.currentUser = null;
+
+    // Clear GraphQL service auth state
+    if (window.graphqlService) {
+      window.graphqlService.logout();
+    }
+
+    // Update UI
+    this.updateCartCount();
+    this.loadCartItems();
+
+    this.showToast("Logged out successfully", "info");
+    updateAuthLinks();
+    window.location.href = "index.html";
   }
 
   async loadCartFromBackend() {
@@ -284,6 +341,8 @@ class ShopZoneApp {
     const product = this.products.find((p) => p.id === productId);
     if (!product) return;
 
+    let addedViaGraphQL = false;
+
     // If user is logged in and backend is available, use GraphQL
     if (this.currentUser && this.backendAvailable && window.graphqlService) {
       try {
@@ -291,6 +350,7 @@ class ShopZoneApp {
         this.showToast(`${product.name} added to cart!`, "success");
         // Refresh cart from backend
         await this.loadCartFromBackend();
+        addedViaGraphQL = true;
         return;
       } catch (error) {
         console.error("Failed to add to cart via GraphQL:", error);
@@ -298,22 +358,24 @@ class ShopZoneApp {
       }
     }
 
-    // Fallback to local storage
-    const existingItem = this.cart.find((item) => item.id === productId);
+    // Fallback to local storage only if GraphQL failed or not available
+    if (!addedViaGraphQL) {
+      const existingItem = this.cart.find((item) => item.id === productId);
 
-    if (existingItem) {
-      existingItem.quantity += 1;
-    } else {
-      this.cart.push({
-        ...product,
-        quantity: 1,
-        addedAt: new Date().toISOString(),
-      });
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        this.cart.push({
+          ...product,
+          quantity: 1,
+          addedAt: new Date().toISOString(),
+        });
+      }
+
+      this.saveCart();
+      this.updateCartCount();
+      this.showToast(`${product.name} added to cart!`, "success");
     }
-
-    this.saveCart();
-    this.updateCartCount();
-    this.showToast(`${product.name} added to cart!`, "success");
   }
 
   async updateCartQuantity(productId, change) {
@@ -641,7 +703,7 @@ function updateAuthLinks() {
   if (authLink) {
     if (currentUser) {
       authLink.innerHTML = '<i class="fas fa-user me-1"></i>Account';
-      authLink.href = "admin.html";
+      authLink.href = currentUser.role === "admin" ? "admin.html" : "profile.html";
     } else {
       authLink.innerHTML = '<i class="fas fa-user me-1"></i>Login';
       authLink.href = "login.html";

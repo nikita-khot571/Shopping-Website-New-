@@ -1,7 +1,7 @@
 {
   "name": "shopzone-ecommerce",
   "version": "1.0.0",
-  "description": "Simplified e-commerce with GraphQL and SQLite",
+  "description": "Simplified e-commerce with GraphQL and MySQL",
   "main": "server/index.js",
   "type": "commonjs",
   "scripts": {
@@ -21,8 +21,6 @@
     "express": "^4.21.2",
     "graphql": "^16.8.1",
     "jsonwebtoken": "^9.0.2",
-    "sequelize": "^6.37.1",
-    "sqlite3": "^5.1.6",
     "uuid": "^10.0.0",
     "validator": "^13.11.0"
   },
@@ -32,12 +30,13 @@
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.7.9",
+    "@types/nodemailer": "^6.4.20",
     "@types/sequelize": "^4.28.20",
-    "@types/sqlite3": "^3.1.11",
     "@types/uuid": "^10.0.0",
     "@types/validator": "^13.12.2",
     "concurrently": "^9.0.1",
-    "live-server": "^1.2.2",
+    "live-server": "^1.2.0",
+    "nodemailer": "^7.0.6",
     "nodemon": "^3.1.7",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3"

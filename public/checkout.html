@@ -504,29 +504,23 @@
             placeOrderBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Placing Order...';
             
             try {
-                // Prepare shipping address
-                const shippingAddress = {
-                    firstName: document.getElementById('shippingFirstName').value,
-                    lastName: document.getElementById('shippingLastName').value,
-                    email: document.getElementById('shippingEmail').value,
-                    phone: document.getElementById('shippingPhone').value,
-                    address: document.getElementById('shippingAddress').value,
-                    city: document.getElementById('shippingCity').value,
-                    state: document.getElementById('shippingState').value,
-                    zipCode: document.getElementById('shippingZip').value
-                };
-                
-                // Prepare payment method
-                const paymentMethodType = document.querySelector('input[name="paymentMethod"]:checked').value;
-                const paymentMethod = {
-                    type: paymentMethodType,
-                    ...(paymentMethodType === 'upi' ? { upiId: document.getElementById('upiId').value } : {}),
-                    ...(paymentMethodType !== 'cod' && paymentMethodType !== 'upi' ? {
-                        cardNumber: document.getElementById('cardNumber').value,
-                        expiryDate: document.getElementById('expiryDate').value,
-                        cvv: document.getElementById('cvv').value,
-                        cardholderName: document.getElementById('cardholderName').value
-                    } : {})
+                // Prepare order input object
+                const orderInput = {
+                    userId: currentUser.id,
+                    items: checkoutData.items.map(item => ({
+                        productId: item.id,
+                        quantity: item.quantity,
+                        price: parseFloat(item.price)
+                    })),
+                    shippingAddress: {
+                        street: document.getElementById('shippingAddress').value,
+                        city: document.getElementById('shippingCity').value,
+                        state: document.getElementById('shippingState').value,
+                        zipCode: document.getElementById('shippingZip').value,
+                        country: 'India' // Assuming country is India, can be extended to form input
+                    },
+                    paymentMethodId: null, // Assuming payment method ID is not used, can be extended
+                    notes: ''
                 };
                 
                 const response = await fetch('/graphql', {
@@ -537,8 +531,8 @@
                     },
                     body: JSON.stringify({
                         query: `
-                            mutation CreateOrder($shippingAddress: String!, $paymentMethod: String!) {
-                                createOrder(shippingAddress: $shippingAddress, paymentMethod: $paymentMethod) {
+                            mutation CreateOrder($input: OrderInput!) {
+                                createOrder(input: $input) {
                                     id
                                     total
                                     status
@@ -547,8 +541,7 @@
                             }
                         `,
                         variables: {
-                            shippingAddress: JSON.stringify(shippingAddress),
-                            paymentMethod: JSON.stringify(paymentMethod)
+                            input: orderInput
                         }
                     })
                 });
@@ -591,7 +584,11 @@
             if (authLink) {
                 if (currentUser) {
                     authLink.innerHTML = '<i class="fas fa-user me-1"></i>Account';
-                    authLink.href = 'admin.html';
+                    if (currentUser.role === 'admin') {
+                        authLink.href = 'admin.html';
+                    } else {
+                        authLink.href = 'profile.html';
+                    }
                 } else {
                     authLink.innerHTML = '<i class="fas fa-user me-1"></i>Login';
                     authLink.href = 'login.html';

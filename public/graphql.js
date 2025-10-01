@@ -450,6 +450,12 @@ const GraphQLMutations = {
                 createdAt
             }
         }
+    `,
+
+    LOGOUT: `
+        mutation Logout {
+            logout
+        }
     `
 };
 
@@ -535,22 +541,25 @@ class GraphQLService {
     }
 
     // Cart Services
-    async addToCart(productId, quantity = 1) {
+    async addToCart(userId, productId, quantity = 1) {
         return this.client.mutation(GraphQLMutations.ADD_TO_CART, {
+            userId,
             productId,
-            quantity
+            quantity: parseInt(quantity, 10)
         });
     }
 
-    async updateCartItem(productId, quantity) {
+    async updateCartItem(userId, productId, quantity) {
         return this.client.mutation(GraphQLMutations.UPDATE_CART_ITEM, {
+            userId,
             productId,
-            quantity
+            quantity: parseInt(quantity, 10)
         });
     }
 
-    async removeFromCart(productId) {
+    async removeFromCart(userId, productId) {
         return this.client.mutation(GraphQLMutations.REMOVE_FROM_CART, {
+            userId,
             productId
         });
     }
@@ -560,8 +569,8 @@ class GraphQLService {
         return result;
     }
 
-    async clearCart() {
-        return this.client.mutation(GraphQLMutations.CLEAR_CART);
+    async clearCart(userId) {
+        return this.client.mutation(GraphQLMutations.CLEAR_CART, { userId });
     }
 
     // Order Services
@@ -640,7 +649,16 @@ class GraphQLService {
     }
 
     // Utility Methods
-    logout() {
+    async logout() {
+        try {
+            // Call the server-side logout mutation to log the event
+            await this.client.mutation(GraphQLMutations.LOGOUT);
+        } catch (error) {
+            console.error('Server logout error:', error);
+            // Continue with client-side logout even if server call fails
+        }
+
+        // Clear local auth state
         localStorage.removeItem('authToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('currentUser');

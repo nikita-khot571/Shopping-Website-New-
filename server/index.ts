@@ -3,6 +3,7 @@ import { ApolloServer } from 'apollo-server-express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import nodemailer from 'nodemailer';
 import { typeDefs, resolvers } from './schema';
 import { setupDatabase } from './database/setup';
 
@@ -36,15 +37,54 @@ async function startServer() {
     app.use(express.static(path.join(__dirname, '../public')));
     
     app.get('/health', (_req: Request, res: Response) => {
-        res.json({ 
-            status: 'OK', 
+        res.json({
+            status: 'OK',
             timestamp: new Date(),
-            database: 'SQLite',
+            database: 'MySQL',
             environment: process.env.NODE_ENV || 'development',
             version: '1.0.0'
         });
     });
-    
+
+    app.post('/api/send-email', async (req: Request, res: Response) => {
+        try {
+            const { name, email, message } = req.body;
+
+            if (!name || !email || !message) {
+                return res.status(400).json({ error: 'Name, email, and message are required' });
+            }
+
+            // Create transporter (using Gmail as example - configure as needed)
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS
+                }
+            });
+
+            const mailOptions = {
+                from: email,
+                to: process.env.CONTACT_EMAIL || 'contact@shopzone.com',
+                subject: `Contact Form Message from ${name}`,
+                html: `
+                    <h3>New Contact Form Submission</h3>
+                    <p><strong>Name:</strong> ${name}</p>
+                    <p><strong>Email:</strong> ${email}</p>
+                    <p><strong>Message:</strong></p>
+                    <p>${message.replace(/\n/g, '<br>')}</p>
+                `
+            };
+
+            await transporter.sendMail(mailOptions);
+
+            res.json({ success: true, message: 'Email sent successfully' });
+        } catch (error) {
+            console.error('Email sending error:', error);
+            res.status(500).json({ error: 'Failed to send email' });
+        }
+    });
+
     try {
         console.log('🔄 Initializing database...');
         await setupDatabase();

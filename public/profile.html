@@ -328,6 +328,26 @@
             }
         }
 
+        function updateAuthLinks() {
+            const authLink = document.querySelector('.navbar-nav .nav-link[href="profile.html"]');
+            if (authLink) {
+                const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+                if (currentUser) {
+                    if (currentUser.role === 'admin') {
+                        authLink.href = 'admin.html';
+                    } else {
+                        authLink.href = 'profile.html';
+                    }
+                } else {
+                    authLink.href = 'login.html';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAuthLinks();
+        });
+
         function loadUserProfile() {
             if (!currentUser) return;
             

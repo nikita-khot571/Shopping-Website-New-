@@ -1,349 +1,154 @@
-import { Sequelize, DataTypes, Model } from "sequelize";
-import dotenv from "dotenv";
-import bcrypt from "bcryptjs";
-import path from "path";
 import fs from "fs";
+import path from "path";
+import bcrypt from "bcryptjs";
+import { v4 as uuidv4 } from "uuid";
 
-dotenv.config();
+const DB_PATH = path.join(__dirname, "../../db.json");
 
-// Create database directory if it doesn't exist
-const dbPath = process.env.DB_PATH || "./database/shopzone.db";
-const dbDir = path.dirname(dbPath);
-
-console.log("📁 Database directory:", dbDir);
-console.log("📁 Database file:", dbPath);
-
-if (!fs.existsSync(dbDir)) {
-  console.log("📁 Creating database directory...");
-  fs.mkdirSync(dbDir, { recursive: true });
+export interface User {
+  id: string;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  role: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-const sequelize = new Sequelize({
-  dialect: "sqlite",
-  storage: dbPath,
-  logging: false,
-  define: {
-    timestamps: true,
-    underscored: false,
-    freezeTableName: true,
-  },
-});
-
-export class User extends Model {
-  public id!: string;
-  public email!: string;
-  public password!: string;
-  public firstName!: string;
-  public lastName!: string;
-  public phone?: string;
-  public role!: string;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  image?: string;
+  stock: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
-User.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      validate: { isEmail: true },
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: { len: [6, 100] },
-    },
-    firstName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: { len: [1, 50] },
-    },
-    lastName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: { len: [1, 50] },
-    },
-    phone: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    role: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: "customer",
-      validate: {
-        isIn: [["admin", "customer"]],
-      },
-    },
-  },
-  {
-    sequelize,
-    modelName: "User",
-    tableName: "users",
-    timestamps: true,
+export interface CartItem {
+  id: string;
+  userId: string;
+  productId: string;
+  quantity: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Order {
+  id: string;
+  userId: string;
+  total: number;
+  status: string;
+  shippingAddress: string;
+  paymentMethod: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrderItem {
+  id: string;
+  orderId: string;
+  productId: string;
+  quantity: number;
+  price: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Database {
+  users: User[];
+  products: Product[];
+  cart_items: CartItem[];
+  orders: Order[];
+  order_items: OrderItem[];
+}
+
+function loadDatabase(): Database {
+  try {
+    if (!fs.existsSync(DB_PATH)) {
+      const initialDb: Database = {
+        users: [],
+        products: [],
+        cart_items: [],
+        orders: [],
+        order_items: [],
+      };
+      fs.writeFileSync(DB_PATH, JSON.stringify(initialDb, null, 2));
+      return initialDb;
+    }
+    const data = fs.readFileSync(DB_PATH, "utf-8");
+    return JSON.parse(data);
+  } catch (error) {
+    console.error("Error loading database:", error);
+    throw error;
   }
-);
-
-export class Product extends Model {
-  public id!: string;
-  public name!: string;
-  public description!: string;
-  public price!: number;
-  public category!: string;
-  public image?: string;
-  public stock!: number;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
 }
 
-Product.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: { len: [1, 100] },
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    price: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-      validate: { min: 0 },
-    },
-    category: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        isIn: [["electronics", "books", "clothing", "home", "sports", "toys"]],
-      },
-    },
-    image: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    stock: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0,
-      validate: { min: 0 },
-    },
-  },
-  {
-    sequelize,
-    modelName: "Product",
-    tableName: "products",
-    timestamps: true,
+function saveDatabase(db: Database): void {
+  try {
+    fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+  } catch (error) {
+    console.error("Error saving database:", error);
+    throw error;
   }
-);
-
-export class Cart extends Model {
-  public id!: string;
-  public userId!: string;
-  public productId!: string;
-  public quantity!: number;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
 }
-
-Cart.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    userId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
-    productId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
-    quantity: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 1,
-      validate: { min: 1 },
-    },
-  },
-  {
-    sequelize,
-    modelName: "Cart",
-    tableName: "cart_items",
-    timestamps: true,
-  }
-);
-
-export class Order extends Model {
-  public id!: string;
-  public userId!: string;
-  public total!: number;
-  public status!: string;
-  public shippingAddress!: string;
-  public paymentMethod!: string;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
-}
-
-Order.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    userId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
-    total: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-      validate: { min: 0 },
-    },
-    status: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: "pending",
-      validate: {
-        isIn: [["pending", "processing", "shipped", "delivered", "cancelled"]],
-      },
-    },
-    shippingAddress: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
-    paymentMethod: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
-  },
-  {
-    sequelize,
-    modelName: "Order",
-    tableName: "orders",
-    timestamps: true,
-  }
-);
-
-export class OrderItem extends Model {
-  public id!: string;
-  public orderId!: string;
-  public productId!: string;
-  public quantity!: number;
-  public price!: number;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
-}
-
-OrderItem.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    orderId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
-    productId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
-    quantity: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      validate: { min: 1 },
-    },
-    price: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-      validate: { min: 0 },
-    },
-  },
-  {
-    sequelize,
-    modelName: "OrderItem",
-    tableName: "order_items",
-    timestamps: true,
-  }
-);
-
-// Set up associations
-User.hasMany(Cart, { foreignKey: "userId", onDelete: "CASCADE" });
-Cart.belongsTo(User, { foreignKey: "userId" });
-
-Product.hasMany(Cart, { foreignKey: "productId", onDelete: "CASCADE" });
-Cart.belongsTo(Product, { foreignKey: "productId" });
-
-User.hasMany(Order, { foreignKey: "userId", onDelete: "CASCADE" });
-Order.belongsTo(User, { foreignKey: "userId" });
-
-Order.hasMany(OrderItem, { foreignKey: "orderId", onDelete: "CASCADE" });
-OrderItem.belongsTo(Order, { foreignKey: "orderId" });
-
-Product.hasMany(OrderItem, { foreignKey: "productId" });
-OrderItem.belongsTo(Product, { foreignKey: "productId" });
 
 export async function setupDatabase() {
   try {
-    console.log("🔄 Setting up SQLite database...");
-    console.log("📁 Database file:", dbPath);
+    console.log("🔄 Setting up JSON database...");
+    console.log("📁 Database file:", DB_PATH);
 
-    // Test database connection
-    await sequelize.authenticate();
-    console.log("✅ Database connection established");
-
-    // Sync database (create tables)
-    await sequelize.sync({ force: false, alter: false });
-    console.log("✅ Database tables synchronized");
+    const db = loadDatabase();
 
     // Check if we need to seed data
-    const userCount = await User.count();
-    console.log(`👥 Found ${userCount} users in database`);
+    console.log(`👥 Found ${db.users.length} users in database`);
 
-    if (userCount === 0) {
+    if (db.users.length === 0) {
       console.log("🌱 Seeding initial data...");
 
       // Create admin user
-      const adminUser = await User.create({
+      const adminUser: User = {
+        id: uuidv4(),
         email: "admin@shopzone.com",
         password: await bcrypt.hash("admin123", 12),
         firstName: "Admin",
         lastName: "User",
         phone: "+1234567890",
         role: "admin",
-      });
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      db.users.push(adminUser);
       console.log("✅ Admin user created:", adminUser.email);
 
       // Create sample customer
-      const customerUser = await User.create({
+      const customerUser: User = {
+        id: uuidv4(),
         email: "customer@shopzone.com",
         password: await bcrypt.hash("customer123", 12),
         firstName: "John",
         lastName: "Doe",
         phone: "+1987654321",
         role: "customer",
-      });
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      db.users.push(customerUser);
       console.log("✅ Customer user created:", customerUser.email);
+    }
 
-      // Create sample products
-      const products = [
-        // Electronics
+    // Seed products if not enough
+    console.log(`📦 Found ${db.products.length} products in database`);
+
+    if (db.products.length < 53) {
+      console.log("🌱 Seeding products...");
+
+      const products: Omit<Product, "id" | "createdAt" | "updatedAt">[] = [
+        // Electronics (11 products)
         {
           name: "iPhone 14 Pro",
           description:
@@ -352,7 +157,7 @@ export async function setupDatabase() {
           category: "electronics",
           stock: 50,
           image:
-            "https://via.placeholder.com/300x200/007bff/ffffff?text=iPhone+14+Pro",
+            "https://m.media-amazon.com/images/I/61cwywLZR-L._AC_SL1500_.jpg",
         },
         {
           name: "MacBook Air M2",
@@ -362,7 +167,7 @@ export async function setupDatabase() {
           category: "electronics",
           stock: 30,
           image:
-            "https://via.placeholder.com/300x200/6c757d/ffffff?text=MacBook+Air+M2",
+            "https://m.media-amazon.com/images/I/71qid7QFWJL._AC_SL1500_.jpg",
         },
         {
           name: "Samsung Galaxy S23",
@@ -372,7 +177,7 @@ export async function setupDatabase() {
           category: "electronics",
           stock: 40,
           image:
-            "https://via.placeholder.com/300x200/17a2b8/ffffff?text=Galaxy+S23",
+            "https://m.media-amazon.com/images/I/61U6oC65TTL._AC_SL1500_.jpg",
         },
         {
           name: "Sony WH-1000XM4",
@@ -382,7 +187,7 @@ export async function setupDatabase() {
           category: "electronics",
           stock: 35,
           image:
-            "https://via.placeholder.com/300x200/495057/ffffff?text=Sony+Headphones",
+            "https://m.media-amazon.com/images/I/61D4Z3yKPAL._AC_SL1500_.jpg",
         },
         {
           name: "iPad Pro 12.9-inch",
@@ -392,7 +197,7 @@ export async function setupDatabase() {
           category: "electronics",
           stock: 25,
           image:
-            "https://via.placeholder.com/300x200/28a745/ffffff?text=iPad+Pro",
+            "https://m.media-amazon.com/images/I/81+N4PFF7jS._AC_SL1500_.jpg",
         },
         {
           name: "Dell XPS 13 Laptop",
@@ -402,7 +207,7 @@ export async function setupDatabase() {
           category: "electronics",
           stock: 20,
           image:
-            "https://via.placeholder.com/300x200/dc3545/ffffff?text=Dell+XPS+13",
+            "https://m.media-amazon.com/images/I/71UQ8C8YqAL._AC_SL1500_.jpg",
         },
         {
           name: "Apple Watch Series 8",
@@ -412,7 +217,7 @@ export async function setupDatabase() {
           category: "electronics",
           stock: 45,
           image:
-            "https://via.placeholder.com/300x200/ffc107/000000?text=Apple+Watch",
+            "https://m.media-amazon.com/images/I/71wu+HMAKBL._AC_SL1500_.jpg",
         },
         {
           name: "Nintendo Switch OLED",
@@ -422,10 +227,40 @@ export async function setupDatabase() {
           category: "electronics",
           stock: 30,
           image:
-            "https://via.placeholder.com/300x200/6f42c1/ffffff?text=Nintendo+Switch",
+            "https://m.media-amazon.com/images/I/61-PblYntsL._AC_SL1500_.jpg",
+        },
+        {
+          name: "Google Pixel 7",
+          description:
+            "Google's latest smartphone with Tensor G2 chip, advanced camera, and pure Android experience",
+          price: 599.99,
+          category: "electronics",
+          stock: 40,
+          image:
+            "https://m.media-amazon.com/images/I/71E5zB1qbIL._AC_SL1500_.jpg",
+        },
+        {
+          name: "Bose QuietComfort Earbuds",
+          description:
+            "True wireless earbuds with world-class noise cancellation and 6-hour battery life",
+          price: 279.99,
+          category: "electronics",
+          stock: 50,
+          image:
+            "https://m.media-amazon.com/images/I/61D4Z3yKPAL._AC_SL1500_.jpg",
+        },
+        {
+          name: "Logitech MX Master 3 Mouse",
+          description:
+            "Advanced wireless mouse with customizable buttons, ergonomic design, and 70-day battery",
+          price: 99.99,
+          category: "electronics",
+          stock: 60,
+          image:
+            "https://m.media-amazon.com/images/I/61U6oC65TTL._AC_SL1500_.jpg",
         },
 
-        // Books
+        // Books (8 products)
         {
           name: "The Great Gatsby",
           description:
@@ -434,7 +269,7 @@ export async function setupDatabase() {
           category: "books",
           stock: 100,
           image:
-            "https://via.placeholder.com/300x200/28a745/ffffff?text=The+Great+Gatsby",
+            "https://m.media-amazon.com/images/I/81af+MCrB0L._AC_UY218_.jpg",
         },
         {
           name: "Dune by Frank Herbert",
@@ -443,7 +278,7 @@ export async function setupDatabase() {
           price: 15.99,
           category: "books",
           stock: 60,
-          image: "https://via.placeholder.com/300x200/6f42c1/ffffff?text=Dune",
+          image: "https://m.media-amazon.com/images/I/81ym3QUd3KL._AC_UY218_.jpg",
         },
         {
           name: "To Kill a Mockingbird",
@@ -453,7 +288,7 @@ export async function setupDatabase() {
           category: "books",
           stock: 80,
           image:
-            "https://via.placeholder.com/300x200/fd7e14/ffffff?text=To+Kill+a+Mockingbird",
+            "https://m.media-amazon.com/images/I/81aY1lxk+9L._AC_UY218_.jpg",
         },
         {
           name: "1984 by George Orwell",
@@ -462,7 +297,7 @@ export async function setupDatabase() {
           price: 13.99,
           category: "books",
           stock: 70,
-          image: "https://via.placeholder.com/300x200/20c997/ffffff?text=1984",
+          image: "https://m.media-amazon.com/images/I/71kxa1-0mfL._AC_UY218_.jpg",
         },
         {
           name: "The Catcher in the Rye",
@@ -472,7 +307,7 @@ export async function setupDatabase() {
           category: "books",
           stock: 65,
           image:
-            "https://via.placeholder.com/300x200/e83e8c/ffffff?text=Catcher+in+the+Rye",
+            "https://m.media-amazon.com/images/I/81OthjkJBuL._AC_UY218_.jpg",
         },
         {
           name: "Pride and Prejudice",
@@ -482,10 +317,30 @@ export async function setupDatabase() {
           category: "books",
           stock: 90,
           image:
-            "https://via.placeholder.com/300x200/6c757d/ffffff?text=Pride+and+Prejudice",
+            "https://m.media-amazon.com/images/I/81NLDvyAHrL._AC_UY218_.jpg",
+        },
+        {
+          name: "Harry Potter and the Sorcerer's Stone",
+          description:
+            "The first book in the Harry Potter series by J.K. Rowling - A magical adventure begins",
+          price: 9.99,
+          category: "books",
+          stock: 120,
+          image:
+            "https://m.media-amazon.com/images/I/81iqZ2HHD-L._AC_UY218_.jpg",
+        },
+        {
+          name: "The Hobbit",
+          description:
+            "J.R.R. Tolkien's classic fantasy novel - The adventure of Bilbo Baggins",
+          price: 13.99,
+          category: "books",
+          stock: 85,
+          image:
+            "https://m.media-amazon.com/images/I/91b0C2YNSrL._AC_UY218_.jpg",
         },
 
-        // Clothing
+        // Clothing (9 products)
         {
           name: "Nike Air Max 270",
           description:
@@ -494,7 +349,7 @@ export async function setupDatabase() {
           category: "clothing",
           stock: 75,
           image:
-            "https://via.placeholder.com/300x200/dc3545/ffffff?text=Nike+Air+Max",
+            "https://m.media-amazon.com/images/I/71VaQ+VnLWL._AC_SL1500_.jpg",
         },
         {
           name: "Levi's 501 Jeans",
@@ -504,7 +359,7 @@ export async function setupDatabase() {
           category: "clothing",
           stock: 90,
           image:
-            "https://via.placeholder.com/300x200/fd7e14/ffffff?text=Levis+Jeans",
+            "https://m.media-amazon.com/images/I/81f5PF9bfIL._AC_SL1500_.jpg",
         },
         {
           name: "Adidas Ultraboost 22",
@@ -514,7 +369,7 @@ export async function setupDatabase() {
           category: "clothing",
           stock: 55,
           image:
-            "https://via.placeholder.com/300x200/28a745/ffffff?text=Adidas+Ultraboost",
+            "https://m.media-amazon.com/images/I/81ExJVA4hML._AC_SL1500_.jpg",
         },
         {
           name: "H&M Cotton T-Shirt",
@@ -524,7 +379,7 @@ export async function setupDatabase() {
           category: "clothing",
           stock: 120,
           image:
-            "https://via.placeholder.com/300x200/17a2b8/ffffff?text=H%26M+T-Shirt",
+            "https://m.media-amazon.com/images/I/71p4vODhgOL._AC_SL1500_.jpg",
         },
         {
           name: "Zara Wool Coat",
@@ -534,7 +389,7 @@ export async function setupDatabase() {
           category: "clothing",
           stock: 35,
           image:
-            "https://via.placeholder.com/300x200/6f42c1/ffffff?text=Zara+Wool+Coat",
+            "https://m.media-amazon.com/images/I/71yZQH8Q8JL._AC_SL1500_.jpg",
         },
         {
           name: "Uniqlo Down Jacket",
@@ -544,10 +399,40 @@ export async function setupDatabase() {
           category: "clothing",
           stock: 60,
           image:
-            "https://via.placeholder.com/300x200/e83e8c/ffffff?text=Uniqlo+Down+Jacket",
+            "https://m.media-amazon.com/images/I/71r7eWuCsaL._AC_SL1500_.jpg",
+        },
+        {
+          name: "Converse Chuck Taylor",
+          description:
+            "Iconic high-top sneakers with canvas upper and rubber sole - Timeless style",
+          price: 59.99,
+          category: "clothing",
+          stock: 100,
+          image:
+            "https://m.media-amazon.com/images/I/71VaQ+VnLWL._AC_SL1500_.jpg",
+        },
+        {
+          name: "Ray-Ban Aviator Sunglasses",
+          description:
+            "Classic aviator sunglasses with polarized lenses and metal frame",
+          price: 149.99,
+          category: "clothing",
+          stock: 70,
+          image:
+            "https://m.media-amazon.com/images/I/81f5PF9bfIL._AC_SL1500_.jpg",
+        },
+        {
+          name: "Patagonia Fleece Jacket",
+          description:
+            "Warm and durable fleece jacket made from recycled polyester",
+          price: 119.99,
+          category: "clothing",
+          stock: 45,
+          image:
+            "https://m.media-amazon.com/images/I/81ExJVA4hML._AC_SL1500_.jpg",
         },
 
-        // Home
+        // Home (8 products)
         {
           name: "Breville Coffee Maker",
           description:
@@ -556,7 +441,7 @@ export async function setupDatabase() {
           category: "home",
           stock: 40,
           image:
-            "https://via.placeholder.com/300x200/ffc107/000000?text=Coffee+Maker",
+            "https://m.media-amazon.com/images/I/71rG+eBcxtL._AC_SL1500_.jpg",
         },
         {
           name: "LED Desk Lamp",
@@ -566,7 +451,7 @@ export async function setupDatabase() {
           category: "home",
           stock: 45,
           image:
-            "https://via.placeholder.com/300x200/20c997/ffffff?text=Desk+Lamp",
+            "https://m.media-amazon.com/images/I/61Vzq3qE7xL._AC_SL1500_.jpg",
         },
         {
           name: "KitchenAid Stand Mixer",
@@ -576,7 +461,7 @@ export async function setupDatabase() {
           category: "home",
           stock: 15,
           image:
-            "https://via.placeholder.com/300x200/495057/ffffff?text=KitchenAid+Mixer",
+            "https://m.media-amazon.com/images/I/81O9VyTxsCL._AC_SL1500_.jpg",
         },
         {
           name: "Dyson Vacuum Cleaner",
@@ -586,7 +471,7 @@ export async function setupDatabase() {
           category: "home",
           stock: 20,
           image:
-            "https://via.placeholder.com/300x200/dc3545/ffffff?text=Dyson+Vacuum",
+            "https://m.media-amazon.com/images/I/71uVOEHJ6JL._AC_SL1500_.jpg",
         },
         {
           name: "Instant Pot Duo",
@@ -596,7 +481,7 @@ export async function setupDatabase() {
           category: "home",
           stock: 50,
           image:
-            "https://via.placeholder.com/300x200/28a745/ffffff?text=Instant+Pot",
+            "https://m.media-amazon.com/images/I/71c2huUeOIL._AC_SL1500_.jpg",
         },
         {
           name: "Casper Memory Foam Mattress",
@@ -606,10 +491,30 @@ export async function setupDatabase() {
           category: "home",
           stock: 10,
           image:
-            "https://via.placeholder.com/300x200/6c757d/ffffff?text=Casper+Mattress",
+            "https://m.media-amazon.com/images/I/81eB+7+CXL._AC_SL1500_.jpg",
+        },
+        {
+          name: "Nespresso Coffee Machine",
+          description:
+            "Compact espresso machine with 19 bar pressure and automatic milk frother",
+          price: 199.99,
+          category: "home",
+          stock: 30,
+          image:
+            "https://m.media-amazon.com/images/I/71rG+eBcxtL._AC_SL1500_.jpg",
+        },
+        {
+          name: "Philips Air Fryer",
+          description:
+            "Healthy air fryer with rapid air technology and digital touchscreen",
+          price: 149.99,
+          category: "home",
+          stock: 25,
+          image:
+            "https://m.media-amazon.com/images/I/61Vzq3qE7xL._AC_SL1500_.jpg",
         },
 
-        // Sports
+        // Sports (9 products)
         {
           name: "Peloton Bike",
           description:
@@ -618,7 +523,7 @@ export async function setupDatabase() {
           category: "sports",
           stock: 5,
           image:
-            "https://via.placeholder.com/300x200/007bff/ffffff?text=Peloton+Bike",
+            "https://m.media-amazon.com/images/I/81f5PF9bfIL._AC_SL1500_.jpg",
         },
         {
           name: "Yoga Mat",
@@ -628,7 +533,7 @@ export async function setupDatabase() {
           category: "sports",
           stock: 80,
           image:
-            "https://via.placeholder.com/300x200/17a2b8/ffffff?text=Yoga+Mat",
+            "https://m.media-amazon.com/images/I/71VaQ+VnLWL._AC_SL1500_.jpg",
         },
         {
           name: "Dumbbell Set",
@@ -638,7 +543,7 @@ export async function setupDatabase() {
           category: "sports",
           stock: 25,
           image:
-            "https://via.placeholder.com/300x200/fd7e14/ffffff?text=Dumbbell+Set",
+            "https://m.media-amazon.com/images/I/81ExJVA4hML._AC_SL1500_.jpg",
         },
         {
           name: "Tennis Racket",
@@ -648,7 +553,7 @@ export async function setupDatabase() {
           category: "sports",
           stock: 40,
           image:
-            "https://via.placeholder.com/300x200/20c997/ffffff?text=Tennis+Racket",
+            "https://m.media-amazon.com/images/I/71p4vODhgOL._AC_SL1500_.jpg",
         },
         {
           name: "Swimming Goggles",
@@ -658,7 +563,7 @@ export async function setupDatabase() {
           category: "sports",
           stock: 100,
           image:
-            "https://via.placeholder.com/300x200/e83e8c/ffffff?text=Swimming+Goggles",
+            "https://m.media-amazon.com/images/I/71yZQH8Q8JL._AC_SL1500_.jpg",
         },
         {
           name: "Foam Roller",
@@ -668,10 +573,40 @@ export async function setupDatabase() {
           category: "sports",
           stock: 70,
           image:
-            "https://via.placeholder.com/300x200/6f42c1/ffffff?text=Foam+Roller",
+            "https://m.media-amazon.com/images/I/71r7eWuCsaL._AC_SL1500_.jpg",
+        },
+        {
+          name: "Wilson Basketball",
+          description:
+            "Official size basketball with composite leather cover and indoor/outdoor use",
+          price: 49.99,
+          category: "sports",
+          stock: 60,
+          image:
+            "https://m.media-amazon.com/images/I/81f5PF9bfIL._AC_SL1500_.jpg",
+        },
+        {
+          name: "Titleist Golf Clubs Set",
+          description:
+            "Complete set of golf clubs for beginners with driver, irons, and putter",
+          price: 499.99,
+          category: "sports",
+          stock: 15,
+          image:
+            "https://m.media-amazon.com/images/I/81ExJVA4hML._AC_SL1500_.jpg",
+        },
+        {
+          name: "Resistance Bands Set",
+          description:
+            "Set of 5 resistance bands with different strengths for full-body workouts",
+          price: 19.99,
+          category: "sports",
+          stock: 90,
+          image:
+            "https://m.media-amazon.com/images/I/71p4vODhgOL._AC_SL1500_.jpg",
         },
 
-        // Toys
+        // Toys (8 products)
         {
           name: "LEGO Creator Set",
           description:
@@ -680,7 +615,7 @@ export async function setupDatabase() {
           category: "toys",
           stock: 60,
           image:
-            "https://via.placeholder.com/300x200/ffc107/000000?text=LEGO+Creator",
+            "https://m.media-amazon.com/images/I/81O9VyTxsCL._AC_SL1500_.jpg",
         },
         {
           name: "Barbie Dreamhouse",
@@ -690,7 +625,7 @@ export async function setupDatabase() {
           category: "toys",
           stock: 15,
           image:
-            "https://via.placeholder.com/300x200/dc3545/ffffff?text=Barbie+Dreamhouse",
+            "https://m.media-amazon.com/images/I/71uVOEHJ6JL._AC_SL1500_.jpg",
         },
         {
           name: "Hot Wheels Track",
@@ -700,7 +635,7 @@ export async function setupDatabase() {
           category: "toys",
           stock: 45,
           image:
-            "https://via.placeholder.com/300x200/28a745/ffffff?text=Hot+Wheels+Track",
+            "https://m.media-amazon.com/images/I/71c2huUeOIL._AC_SL1500_.jpg",
         },
         {
           name: "Puzzle 1000 Pieces",
@@ -710,7 +645,7 @@ export async function setupDatabase() {
           category: "toys",
           stock: 85,
           image:
-            "https://via.placeholder.com/300x200/17a2b8/ffffff?text=Jigsaw+Puzzle",
+            "https://m.media-amazon.com/images/I/81eB+7+CXL._AC_SL1500_.jpg",
         },
         {
           name: "Remote Control Car",
@@ -720,7 +655,7 @@ export async function setupDatabase() {
           category: "toys",
           stock: 30,
           image:
-            "https://via.placeholder.com/300x200/fd7e14/ffffff?text=RC+Car",
+            "https://m.media-amazon.com/images/I/81f5PF9bfIL._AC_SL1500_.jpg",
         },
         {
           name: "Board Game - Monopoly",
@@ -730,32 +665,65 @@ export async function setupDatabase() {
           category: "toys",
           stock: 50,
           image:
-            "https://via.placeholder.com/300x200/20c997/ffffff?text=Monopoly",
+            "https://m.media-amazon.com/images/I/81ExJVA4hML._AC_SL1500_.jpg",
+        },
+        {
+          name: "Nerf N-Strike Blaster",
+          description:
+            "Powerful foam dart blaster with 12-dart drum and motorized firing",
+          price: 29.99,
+          category: "toys",
+          stock: 70,
+          image:
+            "https://m.media-amazon.com/images/I/81O9VyTxsCL._AC_SL1500_.jpg",
+        },
+        {
+          name: "Play-Doh Modeling Compound",
+          description:
+            "Classic modeling compound in assorted colors for creative play",
+          price: 4.99,
+          category: "toys",
+          stock: 150,
+          image:
+            "https://m.media-amazon.com/images/I/71uVOEHJ6JL._AC_SL1500_.jpg",
         },
       ];
 
       for (const product of products) {
-        await Product.create(product);
+        const newProduct: Product = {
+          id: uuidv4(),
+          ...product,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        db.products.push(newProduct);
       }
 
+      saveDatabase(db);
       console.log(`✅ Created ${products.length} sample products`);
       console.log("✅ Initial data seeding completed");
     }
 
     console.log("✅ Database setup complete");
     console.log(`📊 Database statistics:`);
-    console.log(`   Users: ${await User.count()}`);
-    console.log(`   Products: ${await Product.count()}`);
-    console.log(`   Cart Items: ${await Cart.count()}`);
-    console.log(`   Orders: ${await Order.count()}`);
+    console.log(`   Users: ${db.users.length}`);
+    console.log(`   Products: ${db.products.length}`);
+    console.log(`   Cart Items: ${db.cart_items.length}`);
+    console.log(`   Orders: ${db.orders.length}`);
   } catch (error) {
     console.error("❌ Database setup failed:", error);
     throw error;
   }
 }
 
-// Export sequelize instance for use in other files
-export { sequelize };
+// Export database functions
+export function getDatabase(): Database {
+  return loadDatabase();
+}
+
+export function saveToDatabase(db: Database): void {
+  saveDatabase(db);
+}
 
 // If this file is run directly, setup the database
 if (require.main === module) {
