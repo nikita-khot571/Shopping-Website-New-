@@ -127,18 +127,13 @@
         const form = document.getElementById("loginForm");
         const btn = document.getElementById("loginBtn");
 
-        if (show) {
-          spinner.classList.remove("d-none");
-          form.style.opacity = "0.5";
-          btn.disabled = true;
-          btn.innerHTML =
-            '<i class="fas fa-spinner fa-spin me-2"></i>Signing in...';
-        } else {
-          spinner.classList.add("d-none");
-          form.style.opacity = "1";
-          btn.disabled = false;
-          btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Login';
-        }
+        setTimeout(() => {
+          if (user.role === "admin") {
+            window.location.href = "admin.html";
+          } else {
+            window.location.href = "profile.html"; // CHANGED to profile.html for customers
+          }
+        }, 1500);
       }
 
       function fillAdmin() {
@@ -169,7 +164,7 @@
           try {
             console.log("🔄 Attempting login for:", email);
 
-            const response = await fetch("/graphql", {
+            const response = await fetch("http://localhost:4000/graphql", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",

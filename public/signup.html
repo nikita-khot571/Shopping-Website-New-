@@ -112,14 +112,19 @@
       }
 
       function showLoading(show) {
-        const btn = document.querySelector('button[type="submit"]');
-        if (show) {
-          btn.disabled = true;
-          btn.innerHTML =
-            '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
-        } else {
-          btn.disabled = false;
-          btn.innerHTML = "Create Account";
+        if (data.data?.register) {
+          const { token, user } = data.data.register;
+
+          // Store authentication data
+          localStorage.setItem("authToken", token);
+          localStorage.setItem("currentUser", JSON.stringify(user));
+
+          showSuccess("Account created successfully! Redirecting to login...");
+
+          // Redirect to LOGIN page (not index)
+          setTimeout(() => {
+            window.location.href = "login.html"; // CHANGED from index.html
+          }, 2000);
         }
       }
 
@@ -154,26 +159,26 @@
           try {
             console.log("🔄 Attempting registration for:", email);
 
-            const response = await fetch("/graphql", {
+            const response = await fetch("http://localhost:4000/graphql", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
                 query: `
-                    mutation RegisterUser($email: String!, $password: String!, $firstName: String!, $lastName: String!) {
-                        register(email: $email, password: $password, firstName: $firstName, lastName: $lastName) {
-                            token
-                            user {
-                                id
-                                firstName
-                                lastName
-                                email
-                                role
-                            }
-                        }
-                    }
-                `,
+                          mutation RegisterUser($email: String!, $password: String!, $firstName: String!, $lastName: String!) {
+                              register(email: $email, password: $password, firstName: $firstName, lastName: $lastName) {
+                                  token
+                                  user {
+                                      id
+                                      firstName
+                                      lastName
+                                      email
+                                      role
+                                  }
+                              }
+                          }
+                      `,
                 variables: { email, password, firstName, lastName },
               }),
             });

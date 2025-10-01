@@ -1,234 +1,243 @@
 // ShopZone E-commerce Application
 class ShopZoneApp {
-    constructor() {
-        this.products = [];
-        this.cart = JSON.parse(localStorage.getItem('cart')) || [];
-        this.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-        this.currentCategory = 'all';
-        this.searchQuery = '';
-        this.init();
-    }
+  constructor() {
+    this.products = [];
+    this.cart = JSON.parse(localStorage.getItem("cart")) || [];
+    this.currentUser = JSON.parse(localStorage.getItem("currentUser")) || null;
+    this.currentCategory = "all";
+    this.backendAvailable = false;
+    this.checkBackendAvailability();
+    this.searchQuery = "";
+    this.init();
+  }
 
-    async init() {
-        try {
-            // Load products using GraphQL
-            await this.loadProducts();
-            this.renderProducts();
-            this.updateCartCount();
-            this.setupEventListeners();
-        } catch (error) {
-            console.error('Failed to initialize app:', error);
-            this.loadMockProducts();
-        }
-    }
+  async init() {
+    try {
+      // Load products using GraphQL
+      await this.loadProducts();
+      this.renderProducts();
 
-    // Mock products data for development
-    loadMockProducts() {
-        this.products = [
-            {
-                id: '1',
-                name: 'iPhone 14 Pro',
-                description: 'Latest Apple smartphone with A16 Bionic chip',
-                price: 999.99,
-                category: 'electronics',
-                image: 'https://via.placeholder.com/300x200',
-                stock: 50
-            },
-            {
-                id: '2',
-                name: 'MacBook Air M2',
-                description: 'Lightweight laptop with M2 chip and 13-inch display',
-                price: 1199.99,
-                category: 'electronics',
-                image: 'https://via.placeholder.com/300x200',
-                stock: 25
-            },
-            {
-                id: '3',
-                name: 'The Great Gatsby',
-                description: 'Classic American novel by F. Scott Fitzgerald',
-                price: 12.99,
-                category: 'books',
-                image: 'https://via.placeholder.com/300x200',
-                stock: 100
-            },
-            {
-                id: '4',
-                name: 'Nike Air Max',
-                description: 'Comfortable running shoes with air cushioning',
-                price: 129.99,
-                category: 'clothing',
-                image: 'https://via.placeholder.com/300x200',
-                stock: 75
-            },
-            {
-                id: '5',
-                name: 'Coffee Maker',
-                description: 'Programmable drip coffee maker with timer',
-                price: 79.99,
-                category: 'home',
-                image: 'https://via.placeholder.com/300x200',
-                stock: 30
-            },
-            {
-                id: '6',
-                name: 'Samsung Galaxy S23',
-                description: 'Android smartphone with advanced camera system',
-                price: 799.99,
-                category: 'electronics',
-                image: 'https://via.placeholder.com/300x200',
-                stock: 40
-            },
-            {
-                id: '7',
-                name: 'Dune',
-                description: 'Science fiction masterpiece by Frank Herbert',
-                price: 15.99,
-                category: 'books',
-                image: 'https://via.placeholder.com/300x200',
-                stock: 60
-            },
-            {
-                id: '8',
-                name: 'Levi\'s Jeans',
-                description: 'Classic denim jeans with perfect fit',
-                price: 59.99,
-                category: 'clothing',
-                image: 'https://via.placeholder.com/300x200',
-                stock: 90
-            },
-            {
-                id: '9',
-                name: 'Desk Lamp',
-                description: 'LED desk lamp with adjustable brightness',
-                price: 39.99,
-                category: 'home',
-                image: 'https://via.placeholder.com/300x200',
-                stock: 45
-            },
-            {
-                id: '10',
-                name: 'Wireless Headphones',
-                description: 'Noise-cancelling wireless headphones',
-                price: 199.99,
-                category: 'electronics',
-                image: 'https://via.placeholder.com/300x200',
-                stock: 35
-            }
-        ];
+      // Load cart from backend if user is logged in
+      if (this.currentUser && this.backendAvailable) {
+        await this.loadCartFromBackend();
+      }
+
+      this.updateCartCount();
+      this.setupEventListeners();
+    } catch (error) {
+      console.error("Failed to initialize app:", error);
+      this.showToast("Backend not available, using demo mode", "warning");
+      this.loadMockProducts();
+    }
+  }
+  async checkBackendAvailability() {
+    try {
+      const response = await fetch("http://localhost:4000/graphql", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: "{ __typename }",
+        }),
+      });
+      this.backendAvailable = response.ok;
+    } catch (error) {
+      this.backendAvailable = false;
+      console.warn("⚠️ Backend not available, using mock data");
+    }
+  }
+  // Mock products data for development
+  loadMockProducts() {
+    this.products = [
+      {
+        id: "1",
+        name: "iPhone 14 Pro",
+        description: "Latest Apple smartphone with A16 Bionic chip",
+        price: 999.99,
+        category: "electronics",
+        image: "https://via.placeholder.com/300x200",
+        stock: 50,
+      },
+      {
+        id: "2",
+        name: "MacBook Air M2",
+        description: "Lightweight laptop with M2 chip and 13-inch display",
+        price: 1199.99,
+        category: "electronics",
+        image: "https://via.placeholder.com/300x200",
+        stock: 25,
+      },
+      {
+        id: "3",
+        name: "The Great Gatsby",
+        description: "Classic American novel by F. Scott Fitzgerald",
+        price: 12.99,
+        category: "books",
+        image: "https://via.placeholder.com/300x200",
+        stock: 100,
+      },
+      {
+        id: "4",
+        name: "Nike Air Max",
+        description: "Comfortable running shoes with air cushioning",
+        price: 129.99,
+        category: "clothing",
+        image: "https://via.placeholder.com/300x200",
+        stock: 75,
+      },
+      {
+        id: "5",
+        name: "Coffee Maker",
+        description: "Programmable drip coffee maker with timer",
+        price: 79.99,
+        category: "home",
+        image: "https://via.placeholder.com/300x200",
+        stock: 30,
+      },
+      {
+        id: "6",
+        name: "Samsung Galaxy S23",
+        description: "Android smartphone with advanced camera system",
+        price: 799.99,
+        category: "electronics",
+        image: "https://via.placeholder.com/300x200",
+        stock: 40,
+      },
+      {
+        id: "7",
+        name: "Dune",
+        description: "Science fiction masterpiece by Frank Herbert",
+        price: 15.99,
+        category: "books",
+        image: "https://via.placeholder.com/300x200",
+        stock: 60,
+      },
+      {
+        id: "8",
+        name: "Levi's Jeans",
+        description: "Classic denim jeans with perfect fit",
+        price: 59.99,
+        category: "clothing",
+        image: "https://via.placeholder.com/300x200",
+        stock: 90,
+      },
+      {
+        id: "9",
+        name: "Desk Lamp",
+        description: "LED desk lamp with adjustable brightness",
+        price: 39.99,
+        category: "home",
+        image: "https://via.placeholder.com/300x200",
+        stock: 45,
+      },
+      {
+        id: "10",
+        name: "Wireless Headphones",
+        description: "Noise-cancelling wireless headphones",
+        price: 199.99,
+        category: "electronics",
+        image: "https://via.placeholder.com/300x200",
+        stock: 35,
+      },
+      
+    ];
+    this.renderProducts();
+  }
+
+  async loadProducts() {
+    try {
+      if (window.graphqlService) {
+        const data = await window.graphqlService.getProducts(
+          this.currentCategory !== "all" ? this.currentCategory : null,
+          this.searchQuery || null
+        );
+        this.products = data.products;
+        this.backendAvailable = true;
+      } else {
+        throw new Error("GraphQL service not available");
+      }
+    } catch (error) {
+      console.log("GraphQL not available, using mock data:", error.message);
+      this.backendAvailable = false;
+      this.loadMockProducts();
+    }
+  }
+
+  setupEventListeners() {
+    // Search functionality
+    const searchInput = document.getElementById("searchInput");
+    if (searchInput) {
+      searchInput.addEventListener("input", (e) => {
+        this.searchQuery = e.target.value.toLowerCase();
         this.renderProducts();
+      });
     }
 
-    async loadProducts() {
-        try {
-            // This would be replaced with actual GraphQL query
-            const response = await fetch('/graphql', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    query: `
-                        query GetProducts {
-                            products {
-                                id
-                                name
-                                description
-                                price
-                                category
-                                image
-                                stock
-                            }
-                        }
-                    `
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            
-            const data = await response.json();
-            this.products = data.data.products;
-        } catch (error) {
-            console.log('GraphQL not available, using mock data');
-            this.loadMockProducts();
-        }
+    // Cart events
+    document.addEventListener("click", (e) => {
+      if (e.target.classList.contains("btn-add-cart")) {
+        const productId = e.target.getAttribute("data-product-id");
+        this.addToCart(productId);
+      }
+
+      if (e.target.classList.contains("quantity-increase")) {
+        const productId = e.target.getAttribute("data-product-id");
+        this.updateCartQuantity(productId, 1);
+      }
+
+      if (e.target.classList.contains("quantity-decrease")) {
+        const productId = e.target.getAttribute("data-product-id");
+        this.updateCartQuantity(productId, -1);
+      }
+
+      if (e.target.classList.contains("remove-item")) {
+        const productId = e.target.getAttribute("data-product-id");
+        this.removeFromCart(productId);
+      }
+    });
+  }
+
+  renderProducts() {
+    const container = document.getElementById("productsContainer");
+    const loadingSpinner = document.getElementById("loadingSpinner");
+
+    if (!container) return;
+
+    if (loadingSpinner) {
+      loadingSpinner.style.display = "none";
     }
 
-    setupEventListeners() {
-        // Search functionality
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                this.searchQuery = e.target.value.toLowerCase();
-                this.renderProducts();
-            });
-        }
+    let filteredProducts = this.products;
 
-        // Cart events
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('btn-add-cart')) {
-                const productId = e.target.getAttribute('data-product-id');
-                this.addToCart(productId);
-            }
-            
-            if (e.target.classList.contains('quantity-increase')) {
-                const productId = e.target.getAttribute('data-product-id');
-                this.updateCartQuantity(productId, 1);
-            }
-            
-            if (e.target.classList.contains('quantity-decrease')) {
-                const productId = e.target.getAttribute('data-product-id');
-                this.updateCartQuantity(productId, -1);
-            }
-            
-            if (e.target.classList.contains('remove-item')) {
-                const productId = e.target.getAttribute('data-product-id');
-                this.removeFromCart(productId);
-            }
-        });
+    // Filter by category
+    if (this.currentCategory !== "all") {
+      filteredProducts = filteredProducts.filter(
+        (product) => product.category === this.currentCategory
+      );
     }
 
-    renderProducts() {
-        const container = document.getElementById('productsContainer');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        
-        if (!container) return;
-        
-        if (loadingSpinner) {
-            loadingSpinner.style.display = 'none';
-        }
+    // Filter by search query
+    if (this.searchQuery) {
+      filteredProducts = filteredProducts.filter(
+        (product) =>
+          product.name.toLowerCase().includes(this.searchQuery) ||
+          product.description.toLowerCase().includes(this.searchQuery)
+      );
+    }
 
-        let filteredProducts = this.products;
-
-        // Filter by category
-        if (this.currentCategory !== 'all') {
-            filteredProducts = filteredProducts.filter(product => 
-                product.category === this.currentCategory
-            );
-        }
-
-        // Filter by search query
-        if (this.searchQuery) {
-            filteredProducts = filteredProducts.filter(product =>
-                product.name.toLowerCase().includes(this.searchQuery) ||
-                product.description.toLowerCase().includes(this.searchQuery)
-            );
-        }
-
-        if (filteredProducts.length === 0) {
-            container.innerHTML = `
+    if (filteredProducts.length === 0) {
+      container.innerHTML = `
                 <div class="col-12 text-center py-5">
                     <i class="fas fa-search text-muted" style="font-size: 4rem;"></i>
                     <h4 class="mt-3 text-muted">No products found</h4>
                     <p class="text-muted">Try adjusting your search or filter criteria</p>
                 </div>
             `;
-            return;
-        }
+      return;
+    }
 
-        container.innerHTML = filteredProducts.map(product => `
+    container.innerHTML = filteredProducts
+      .map(
+        (product) => `
             <div class="col-md-6 col-lg-4 col-xl-3">
                 <div class="card product-card h-100">
                     <div class="product-image">
@@ -248,92 +257,160 @@ class ShopZoneApp {
                     </div>
                 </div>
             </div>
-        `).join('');
-    }
+        `
+      )
+      .join("");
+  }
 
-    addToCart(productId) {
-        const product = this.products.find(p => p.id === productId);
-        if (!product) return;
-
-        const existingItem = this.cart.find(item => item.id === productId);
-        
-        if (existingItem) {
-            existingItem.quantity += 1;
-        } else {
-            this.cart.push({
-                ...product,
-                quantity: 1,
-                addedAt: new Date().toISOString()
-            });
-        }
-
-        this.saveCart();
+  async loadCartFromBackend() {
+    if (this.currentUser && this.backendAvailable && window.graphqlService) {
+      try {
+        const cartData = await window.graphqlService.getCart(this.currentUser.id);
+        // Transform backend cart data to match local format
+        this.cart = cartData.cart.items.map(item => ({
+          ...item.product,
+          quantity: item.quantity,
+          addedAt: new Date().toISOString(),
+        }));
         this.updateCartCount();
-        this.showToast(`${product.name} added to cart!`, 'success');
+        this.loadCartItems();
+      } catch (error) {
+        console.error("Failed to load cart from backend:", error);
+      }
+    }
+  }
+
+  async addToCart(productId) {
+    const product = this.products.find((p) => p.id === productId);
+    if (!product) return;
+
+    // If user is logged in and backend is available, use GraphQL
+    if (this.currentUser && this.backendAvailable && window.graphqlService) {
+      try {
+        await window.graphqlService.addToCart(this.currentUser.id, productId, 1);
+        this.showToast(`${product.name} added to cart!`, "success");
+        // Refresh cart from backend
+        await this.loadCartFromBackend();
+        return;
+      } catch (error) {
+        console.error("Failed to add to cart via GraphQL:", error);
+        this.showToast("Failed to add to cart, using local storage", "warning");
+      }
     }
 
-    updateCartQuantity(productId, change) {
-        const item = this.cart.find(item => item.id === productId);
-        if (!item) return;
+    // Fallback to local storage
+    const existingItem = this.cart.find((item) => item.id === productId);
 
-        item.quantity += change;
-        
-        if (item.quantity <= 0) {
-            this.removeFromCart(productId);
-            return;
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      this.cart.push({
+        ...product,
+        quantity: 1,
+        addedAt: new Date().toISOString(),
+      });
+    }
+
+    this.saveCart();
+    this.updateCartCount();
+    this.showToast(`${product.name} added to cart!`, "success");
+  }
+
+  async updateCartQuantity(productId, change) {
+    // If user is logged in and backend is available, use GraphQL
+    if (this.currentUser && this.backendAvailable && window.graphqlService) {
+      try {
+        const newQuantity = this.cart.find(item => item.id === productId)?.quantity + change || change;
+        if (newQuantity <= 0) {
+          await this.removeFromCart(productId);
+          return;
         }
-
-        this.saveCart();
-        this.updateCartCount();
-        this.loadCartItems(); // Refresh cart display
+        await window.graphqlService.updateCartItem(this.currentUser.id, productId, newQuantity);
+        await this.loadCartFromBackend();
+        return;
+      } catch (error) {
+        console.error("Failed to update cart quantity via GraphQL:", error);
+        this.showToast("Failed to update quantity, using local storage", "warning");
+      }
     }
 
-    removeFromCart(productId) {
-        const itemIndex = this.cart.findIndex(item => item.id === productId);
-        if (itemIndex > -1) {
-            const item = this.cart[itemIndex];
-            this.cart.splice(itemIndex, 1);
-            this.saveCart();
-            this.updateCartCount();
-            this.loadCartItems(); // Refresh cart display
-            this.showToast(`${item.name} removed from cart`, 'info');
-        }
+    // Fallback to local storage
+    const item = this.cart.find((item) => item.id === productId);
+    if (!item) return;
+
+    item.quantity += change;
+
+    if (item.quantity <= 0) {
+      this.removeFromCart(productId);
+      return;
     }
 
-    saveCart() {
-        localStorage.setItem('cart', JSON.stringify(this.cart));
+    this.saveCart();
+    this.updateCartCount();
+    this.loadCartItems(); // Refresh cart display
+  }
+
+  async removeFromCart(productId) {
+    // If user is logged in and backend is available, use GraphQL
+    if (this.currentUser && this.backendAvailable && window.graphqlService) {
+      try {
+        await window.graphqlService.removeFromCart(this.currentUser.id, productId);
+        await this.loadCartFromBackend();
+        return;
+      } catch (error) {
+        console.error("Failed to remove from cart via GraphQL:", error);
+        this.showToast("Failed to remove item, using local storage", "warning");
+      }
     }
 
-    updateCartCount() {
-        const cartCountElements = document.querySelectorAll('#cartCount');
-        const totalItems = this.cart.reduce((sum, item) => sum + item.quantity, 0);
-        
-        cartCountElements.forEach(element => {
-            element.textContent = totalItems;
-            element.style.display = totalItems > 0 ? 'inline' : 'none';
-        });
+    // Fallback to local storage
+    const itemIndex = this.cart.findIndex((item) => item.id === productId);
+    if (itemIndex > -1) {
+      const item = this.cart[itemIndex];
+      this.cart.splice(itemIndex, 1);
+      this.saveCart();
+      this.updateCartCount();
+      this.loadCartItems(); // Refresh cart display
+      this.showToast(`${item.name} removed from cart`, "info");
+    }
+  }
+
+  saveCart() {
+    localStorage.setItem("cart", JSON.stringify(this.cart));
+  }
+
+  updateCartCount() {
+    const cartCountElements = document.querySelectorAll("#cartCount");
+    const totalItems = this.cart.reduce((sum, item) => sum + item.quantity, 0);
+
+    cartCountElements.forEach((element) => {
+      element.textContent = totalItems;
+      element.style.display = totalItems > 0 ? "inline" : "none";
+    });
+  }
+
+  loadCartItems() {
+    const container = document.getElementById("cartItemsContainer");
+    const emptyMessage = document.getElementById("emptyCartMessage");
+    const checkoutBtn = document.getElementById("checkoutBtn");
+
+    if (!container) return;
+
+    if (this.cart.length === 0) {
+      container.style.display = "none";
+      if (emptyMessage) emptyMessage.style.display = "block";
+      if (checkoutBtn) checkoutBtn.disabled = true;
+      this.updateOrderSummary();
+      return;
     }
 
-    loadCartItems() {
-        const container = document.getElementById('cartItemsContainer');
-        const emptyMessage = document.getElementById('emptyCartMessage');
-        const checkoutBtn = document.getElementById('checkoutBtn');
-        
-        if (!container) return;
+    container.style.display = "block";
+    if (emptyMessage) emptyMessage.style.display = "none";
+    if (checkoutBtn) checkoutBtn.disabled = false;
 
-        if (this.cart.length === 0) {
-            container.style.display = 'none';
-            if (emptyMessage) emptyMessage.style.display = 'block';
-            if (checkoutBtn) checkoutBtn.disabled = true;
-            this.updateOrderSummary();
-            return;
-        }
-
-        container.style.display = 'block';
-        if (emptyMessage) emptyMessage.style.display = 'none';
-        if (checkoutBtn) checkoutBtn.disabled = false;
-
-        container.innerHTML = this.cart.map(item => `
+    container.innerHTML = this.cart
+      .map(
+        (item) => `
             <div class="cart-item">
                 <div class="row align-items-center">
                     <div class="col-md-2">
@@ -350,171 +427,224 @@ class ShopZoneApp {
                     </div>
                     <div class="col-md-2">
                         <div class="quantity-controls">
-                            <button class="quantity-btn quantity-decrease" data-product-id="${item.id}">
+                            <button class="quantity-btn quantity-decrease" data-product-id="${
+                              item.id
+                            }">
                                 <i class="fas fa-minus"></i>
                             </button>
-                            <input type="number" class="quantity-input" value="${item.quantity}" readonly>
-                            <button class="quantity-btn quantity-increase" data-product-id="${item.id}">
+                            <input type="number" class="quantity-input" value="${
+                              item.quantity
+                            }" readonly>
+                            <button class="quantity-btn quantity-increase" data-product-id="${
+                              item.id
+                            }">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
                     </div>
                     <div class="col-md-2 text-end">
-                        <div class="fw-bold mb-2">${(item.price * item.quantity).toFixed(2)}</div>
-                        <button class="btn btn-outline-danger btn-sm remove-item" data-product-id="${item.id}">
+                        <div class="fw-bold mb-2">${(
+                          item.price * item.quantity
+                        ).toFixed(2)}</div>
+                        <button class="btn btn-outline-danger btn-sm remove-item" data-product-id="${
+                          item.id
+                        }">
                             <i class="fas fa-trash"></i> Remove
                         </button>
                     </div>
                 </div>
             </div>
-        `).join('');
+        `
+      )
+      .join("");
 
-        this.updateOrderSummary();
+    this.updateOrderSummary();
+  }
+
+  updateOrderSummary() {
+    const subtotalElement = document.getElementById("subtotal");
+    const taxElement = document.getElementById("tax");
+    const shippingElement = document.getElementById("shipping");
+    const totalElement = document.getElementById("total");
+
+    const subtotal = this.cart.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    const tax = subtotal * 0.085; // 8.5% tax
+    const shipping = subtotal > 50 ? 0 : 5.99; // Free shipping over $50
+    const total = subtotal + tax + shipping;
+
+    if (subtotalElement) subtotalElement.textContent = `${subtotal.toFixed(2)}`;
+    if (taxElement) taxElement.textContent = `${tax.toFixed(2)}`;
+    if (shippingElement) {
+      shippingElement.textContent =
+        shipping === 0 ? "FREE" : `${shipping.toFixed(2)}`;
     }
+    if (totalElement) totalElement.textContent = `${total.toFixed(2)}`;
+  }
 
-    updateOrderSummary() {
-        const subtotalElement = document.getElementById('subtotal');
-        const taxElement = document.getElementById('tax');
-        const shippingElement = document.getElementById('shipping');
-        const totalElement = document.getElementById('total');
-
-        const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const tax = subtotal * 0.085; // 8.5% tax
-        const shipping = subtotal > 50 ? 0 : 5.99; // Free shipping over $50
-        const total = subtotal + tax + shipping;
-
-        if (subtotalElement) subtotalElement.textContent = `${subtotal.toFixed(2)}`;
-        if (taxElement) taxElement.textContent = `${tax.toFixed(2)}`;
-        if (shippingElement) {
-            shippingElement.textContent = shipping === 0 ? 'FREE' : `${shipping.toFixed(2)}`;
-        }
-        if (totalElement) totalElement.textContent = `${total.toFixed(2)}`;
-    }
-
-    showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.className = `toast align-items-center text-white bg-${type} border-0`;
-        toast.setAttribute('role', 'alert');
-        toast.innerHTML = `
+  showToast(message, type = "info") {
+    const toast = document.createElement("div");
+    toast.className = `toast align-items-center text-white bg-${type} border-0`;
+    toast.setAttribute("role", "alert");
+    toast.innerHTML = `
             <div class="d-flex">
                 <div class="toast-body">${message}</div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         `;
 
-        // Add to toast container or create one
-        let toastContainer = document.querySelector('.toast-container');
-        if (!toastContainer) {
-            toastContainer = document.createElement('div');
-            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-            document.body.appendChild(toastContainer);
-        }
-
-        toastContainer.appendChild(toast);
-        const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
-        bsToast.show();
-
-        toast.addEventListener('hidden.bs.toast', () => {
-            toast.remove();
-        });
+    // Add to toast container or create one
+    let toastContainer = document.querySelector(".toast-container");
+    if (!toastContainer) {
+      toastContainer = document.createElement("div");
+      toastContainer.className =
+        "toast-container position-fixed bottom-0 end-0 p-3";
+      document.body.appendChild(toastContainer);
     }
+
+    toastContainer.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+    bsToast.show();
+
+    toast.addEventListener("hidden.bs.toast", () => {
+      toast.remove();
+    });
+  }
 }
 
 // Global functions
-function filterByCategory(category) {
-    if (window.shopZone) {
-        window.shopZone.currentCategory = category;
-        window.shopZone.renderProducts();
-        
-        // Update active category button
-        document.querySelectorAll('.category-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        
-        const activeBtn = document.querySelector(`[data-category="${category}"]`);
-        if (activeBtn) {
-            activeBtn.classList.add('active');
-        }
+async function filterByCategory(category) {
+  if (window.shopZone) {
+    window.shopZone.currentCategory = category;
+
+    // Reload products from backend if available
+    if (window.shopZone.backendAvailable && window.graphqlService) {
+      try {
+        await window.shopZone.loadProducts();
+      } catch (error) {
+        console.log("Failed to load products from backend, using cached data");
+      }
     }
+
+    window.shopZone.renderProducts();
+
+    // Update active category button
+    document.querySelectorAll(".category-btn").forEach((btn) => {
+      btn.classList.remove("active");
+    });
+
+    const activeBtn = document.querySelector(`[data-category="${category}"]`);
+    if (activeBtn) {
+      activeBtn.classList.add("active");
+    }
+  }
 }
 
-function searchProducts() {
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput && window.shopZone) {
-        window.shopZone.searchQuery = searchInput.value.toLowerCase();
-        window.shopZone.renderProducts();
+async function searchProducts() {
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput && window.shopZone) {
+    window.shopZone.searchQuery = searchInput.value.toLowerCase();
+
+    // Reload products from backend if available
+    if (window.shopZone.backendAvailable && window.graphqlService) {
+      try {
+        await window.shopZone.loadProducts();
+      } catch (error) {
+        console.log("Failed to load products from backend, using cached data");
+      }
     }
+
+    window.shopZone.renderProducts();
+  }
 }
 
 function loadCartItems() {
-    if (window.shopZone) {
-        window.shopZone.loadCartItems();
-    }
+  if (window.shopZone) {
+    window.shopZone.loadCartItems();
+  }
 }
 
 function proceedToCheckout() {
-    if (window.shopZone && window.shopZone.cart.length > 0) {
-        // Save checkout data for checkout page
-        const checkoutData = {
-            items: window.shopZone.cart,
-            subtotal: window.shopZone.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-            tax: window.shopZone.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 0.085,
-            shipping: window.shopZone.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) > 50 ? 0 : 5.99
-        };
-        
-        localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
-        window.location.href = 'checkout.html';
-    }
+  if (window.shopZone && window.shopZone.cart.length > 0) {
+    // Save checkout data for checkout page
+    const checkoutData = {
+      items: window.shopZone.cart,
+      subtotal: window.shopZone.cart.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      ),
+      tax:
+        window.shopZone.cart.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0
+        ) * 0.085,
+      shipping:
+        window.shopZone.cart.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0
+        ) > 50
+          ? 0
+          : 5.99,
+    };
+
+    localStorage.setItem("checkoutData", JSON.stringify(checkoutData));
+    window.location.href = "checkout.html";
+  }
 }
 
 function applyPromoCode() {
-    const promoCode = document.getElementById('promoCode');
-    if (promoCode) {
-        const code = promoCode.value.trim().toUpperCase();
-        
-        // Mock promo codes
-        const validCodes = {
-            'SAVE10': 0.10,
-            'WELCOME20': 0.20,
-            'NEWUSER': 0.15
-        };
-        
-        if (validCodes[code]) {
-            window.shopZone.showToast(`Promo code applied! ${(validCodes[code] * 100)}% off`, 'success');
-            // Apply discount logic here
-        } else {
-            window.shopZone.showToast('Invalid promo code', 'danger');
-        }
-        
-        promoCode.value = '';
+  const promoCode = document.getElementById("promoCode");
+  if (promoCode) {
+    const code = promoCode.value.trim().toUpperCase();
+
+    // Mock promo codes
+    const validCodes = {
+      SAVE10: 0.1,
+      WELCOME20: 0.2,
+      NEWUSER: 0.15,
+    };
+
+    if (validCodes[code]) {
+      window.shopZone.showToast(
+        `Promo code applied! ${validCodes[code] * 100}% off`,
+        "success"
+      );
+      // Apply discount logic here
+    } else {
+      window.shopZone.showToast("Invalid promo code", "danger");
     }
+
+    promoCode.value = "";
+  }
 }
 
 function updateCartCount() {
-    if (window.shopZone) {
-        window.shopZone.updateCartCount();
-    }
+  if (window.shopZone) {
+    window.shopZone.updateCartCount();
+  }
 }
 
 // Initialize the app when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    window.shopZone = new ShopZoneApp();
-    
-    // Update auth links based on login status
-    updateAuthLinks();
+document.addEventListener("DOMContentLoaded", function () {
+  window.shopZone = new ShopZoneApp();
+
+  // Update auth links based on login status
+  updateAuthLinks();
 });
 
 function updateAuthLinks() {
-    const authLink = document.getElementById('authLink');
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    
-    if (authLink) {
-        if (currentUser) {
-            authLink.innerHTML = '<i class="fas fa-user me-1"></i>Account';
-            authLink.href = 'admin.html';
-        } else {
-            authLink.innerHTML = '<i class="fas fa-user me-1"></i>Login';
-            authLink.href = 'login.html';
-        }
+  const authLink = document.getElementById("authLink");
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+  if (authLink) {
+    if (currentUser) {
+      authLink.innerHTML = '<i class="fas fa-user me-1"></i>Account';
+      authLink.href = "admin.html";
+    } else {
+      authLink.innerHTML = '<i class="fas fa-user me-1"></i>Login';
+      authLink.href = "login.html";
     }
+  }
 }

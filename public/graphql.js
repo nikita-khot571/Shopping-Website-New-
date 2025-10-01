@@ -1,6 +1,6 @@
 // GraphQL Client for ShopZone E-commerce
 class GraphQLClient {
-    constructor(endpoint = '/graphql') {
+    constructor(endpoint = 'http://localhost:4000/graphql') {
         this.endpoint = endpoint;
         this.headers = {
             'Content-Type': 'application/json',
@@ -268,56 +268,44 @@ const GraphQLMutations = {
 
     // Cart Mutations
     ADD_TO_CART: `
-        mutation AddToCart($userId: ID!, $productId: ID!, $quantity: Int!) {
-            addToCart(userId: $userId, productId: $productId, quantity: $quantity) {
+        mutation AddToCart($productId: ID!, $quantity: Int!) {
+            addToCart(productId: $productId, quantity: $quantity) {
                 id
-                items {
+                userId
+                productId
+                quantity
+                product {
                     id
-                    product {
-                        id
-                        name
-                        price
-                    }
-                    quantity
+                    name
+                    price
                 }
-                total
+                createdAt
+                updatedAt
             }
         }
     `,
 
     UPDATE_CART_ITEM: `
-        mutation UpdateCartItem($userId: ID!, $productId: ID!, $quantity: Int!) {
-            updateCartItem(userId: $userId, productId: $productId, quantity: $quantity) {
+        mutation UpdateCartItem($productId: ID!, $quantity: Int!) {
+            updateCartQuantity(productId: $productId, quantity: $quantity) {
                 id
-                items {
+                userId
+                productId
+                quantity
+                product {
                     id
-                    product {
-                        id
-                        name
-                        price
-                    }
-                    quantity
+                    name
+                    price
                 }
-                total
+                createdAt
+                updatedAt
             }
         }
     `,
 
     REMOVE_FROM_CART: `
-        mutation RemoveFromCart($userId: ID!, $productId: ID!) {
-            removeFromCart(userId: $userId, productId: $productId) {
-                id
-                items {
-                    id
-                    product {
-                        id
-                        name
-                        price
-                    }
-                    quantity
-                }
-                total
-            }
+        mutation RemoveFromCart($productId: ID!) {
+            removeFromCart(productId: $productId)
         }
     `,
 
@@ -547,35 +535,33 @@ class GraphQLService {
     }
 
     // Cart Services
-    async addToCart(userId, productId, quantity = 1) {
+    async addToCart(productId, quantity = 1) {
         return this.client.mutation(GraphQLMutations.ADD_TO_CART, {
-            userId,
             productId,
             quantity
         });
     }
 
-    async updateCartItem(userId, productId, quantity) {
+    async updateCartItem(productId, quantity) {
         return this.client.mutation(GraphQLMutations.UPDATE_CART_ITEM, {
-            userId,
             productId,
             quantity
         });
     }
 
-    async removeFromCart(userId, productId) {
+    async removeFromCart(productId) {
         return this.client.mutation(GraphQLMutations.REMOVE_FROM_CART, {
-            userId,
             productId
         });
     }
 
-    async getCart(userId) {
-        return this.client.query(GraphQLQueries.GET_CART, { userId });
+    async getCart() {
+        const result = await this.client.query(GraphQLQueries.GET_CART);
+        return result;
     }
 
-    async clearCart(userId) {
-        return this.client.mutation(GraphQLMutations.CLEAR_CART, { userId });
+    async clearCart() {
+        return this.client.mutation(GraphQLMutations.CLEAR_CART);
     }
 
     // Order Services
@@ -682,9 +668,9 @@ class ApolloGraphQLService {
 
     setupApolloClient() {
         // Apollo Client setup would go here
-        // import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
+        //import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
         
-        /*
+        
         const httpLink = createHttpLink({
             uri: '/graphql',
             headers: {
@@ -705,7 +691,7 @@ class ApolloGraphQLService {
                 }
             }
         });
-        */
+        
     }
 }
 
