@@ -79,6 +79,7 @@ export const typeDefs = gql`
     orders: [Order!]!
     users: [User!]! # For admin
     allOrders: [Order!]! # For admin
+    adminProducts: [Product!]! # For admin
   }
 
   type Mutation {
@@ -149,16 +150,16 @@ export const resolvers = {
       { category, search, limit = 50, offset = 0 }: any
     ) => {
       try {
+        const where: any = {};
+        if (category && category !== "all") {
+          where.category = category;
+        }
+        if (search) {
+          where.name = { [require('sequelize').Op.iLike]: `%${search}%` };
+        }
+
         const products = await Product.findAll({
-          where: {
-            ...(category && category !== "all" ? { category } : {}),
-            ...(search
-              ? {
-                  name: (name: string) =>
-                    name.toLowerCase().includes(search.toLowerCase()),
-                }
-              : {}),
-          },
+          where,
           limit: Math.min(limit, 100), // Cap at 100
           offset: Math.max(offset, 0),
         });
@@ -194,6 +195,7 @@ export const resolvers = {
       try {
         return Cart.findAll({
           where: { userId: user.id },
+          include: [{ model: Product }],
         });
       } catch (error) {
         console.error("Error fetching cart:", error);
@@ -259,6 +261,34 @@ export const resolvers = {
       } catch (error) {
         console.error("Error fetching all orders:", error);
         throw new Error("Failed to fetch all orders");
+      }
+    },
+
+    adminProducts: async (_: any, __: any, { req }: any) => {
+      const user = await getUser(req);
+      if (!user || user.role !== "admin") {
+        throw new Error("Admin access required");
+      }
+
+      try {
+        // Get distinct categories by fetching all products and extracting categories
+        const allProducts = await Product.findAll();
+        const categories = [...new Set(allProducts.map(p => p.category))];
+
+        // Fetch up to 6 products from each category
+        const products = [];
+        for (const category of categories) {
+          const categoryProducts = await Product.findAll({
+            where: { category },
+            limit: 6
+          });
+          products.push(...categoryProducts);
+        }
+
+        return products;
+      } catch (error) {
+        console.error("Error fetching admin products:", error);
+        throw new Error("Failed to fetch products");
       }
     },
   },
@@ -579,18 +609,13 @@ export const resolvers = {
       if (!user) throw new Error("Not authenticated");
 
       try {
-        if (firstName) user.firstName = firstName.trim();
-        if (lastName) user.lastName = lastName.trim();
-        if (phone !== undefined) user.phone = phone ? phone.trim() : null;
+        const updateData: any = {};
+        if (firstName) updateData.firstName = firstName.trim();
+        if (lastName) updateData.lastName = lastName.trim();
+        if (phone !== undefined) updateData.phone = phone ? phone.trim() : null;
 
-        // Update user in database
-        const db = require('./database/setup').getDatabase();
-        const userIndex = db.users.findIndex((u: any) => u.id === user.id);
-        if (userIndex !== -1) {
-          db.users[userIndex] = { ...user, updatedAt: new Date().toISOString() };
-          require('./database/setup').saveToDatabase(db);
-        }
-        return user;
+        await User.save({ ...user, ...updateData });
+        return await User.findByPk(user.id);
       } catch (error: any) {
         console.error("Update profile error:", error);
         throw new Error(error.message || "Failed to update profile");

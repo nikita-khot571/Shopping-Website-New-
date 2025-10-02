@@ -1,304 +1,130 @@
-import { getDatabase, saveToDatabase, Database, User, Product, CartItem, Order, OrderItem } from './setup';
+import { User, Product, CartItem, Order, OrderItem } from './models';
+import { Op } from 'sequelize';
 
-// Helper functions for JSON database operations
+// Sequelize-based database operations
 
 export class UserModel {
-  static findByPk(id: string): User | null {
-    const db = getDatabase();
-    return db.users.find(user => user.id === id) || null;
+  static async findByPk(id: string) {
+    return await User.findByPk(id);
   }
 
-  static findOne(options: { where: { email?: string } }): User | null {
-    const db = getDatabase();
-    const { where } = options;
-    return db.users.find(user =>
-      (where.email && user.email === where.email)
-    ) || null;
+  static async findOne(options: { where: { email?: string } }) {
+    return await User.findOne(options);
   }
 
-  static findAll(options?: { order?: any[] }): User[] {
-    const db = getDatabase();
-    let users = [...db.users];
-
-    if (options?.order) {
-      // Simple sorting by createdAt DESC
-      users.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
-
-    return users;
+  static async findAll(options?: { order?: any[] }) {
+    return await User.findAll(options);
   }
 
-  static async create(data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
-    const db = getDatabase();
-    const newUser: User = {
-      id: require('uuid').v4(),
-      ...data,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    db.users.push(newUser);
-    saveToDatabase(db);
-    return newUser;
+  static async create(data: any) {
+    return await User.create(data);
+  }
+
+  static async save(user: any) {
+    return await user.save();
   }
 }
 
 export class ProductModel {
-  static findByPk(id: string): Product | null {
-    const db = getDatabase();
-    return db.products.find(product => product.id === id) || null;
+  static async findByPk(id: string) {
+    return await Product.findByPk(id);
   }
 
-  static findAll(options?: {
+  static async findAll(options?: {
     where?: any;
     limit?: number;
     offset?: number;
     order?: any[];
     include?: any[];
-  }): (Product & { Product?: Product })[] {
-    const db = getDatabase();
-    let products = [...db.products];
-
-    if (options?.where) {
-      const { where } = options;
-      if (where.category && where.category !== 'all') {
-        products = products.filter(p => p.category === where.category);
-      }
-      if (where.name) {
-        products = products.filter(p =>
-          p.name.toLowerCase().includes(where.name.toLowerCase())
-        );
-      }
-      if (where.description) {
-        products = products.filter(p =>
-          p.description.toLowerCase().includes(where.description.toLowerCase())
-        );
-      }
+  }) {
+    // Handle search functionality
+    if (options?.where?.name) {
+      options.where = {
+        ...options.where,
+        name: { [Op.iLike]: `%${options.where.name}%` }
+      };
+    }
+    if (options?.where?.description) {
+      options.where = {
+        ...options.where,
+        description: { [Op.iLike]: `%${options.where.description}%` }
+      };
     }
 
-    // Sorting
-    if (options?.order) {
-      products.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
-
-    // Pagination
-    if (options?.offset) {
-      products = products.slice(options.offset);
-    }
-    if (options?.limit) {
-      products = products.slice(0, options.limit);
-    }
-
-    // Include associations
-    if (options?.include) {
-      return products.map(p => ({ ...p, Product: p }));
-    }
-
-    return products;
+    return await Product.findAll(options);
   }
 
-  static async create(data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
-    const db = getDatabase();
-    const newProduct: Product = {
-      id: require('uuid').v4(),
-      ...data,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    db.products.push(newProduct);
-    saveToDatabase(db);
-    return newProduct;
+  static async create(data: any) {
+    return await Product.create(data);
   }
 
-  static async save(product: Product): Promise<void> {
-    const db = getDatabase();
-    const index = db.products.findIndex(p => p.id === product.id);
-    if (index !== -1) {
-      db.products[index] = { ...product, updatedAt: new Date().toISOString() };
-      saveToDatabase(db);
-    }
+  static async save(product: any) {
+    return await product.save();
   }
 
-  static async destroy(options: { where: { id?: string } }): Promise<void> {
-    const db = getDatabase();
-    if (options.where.id) {
-      db.products = db.products.filter(p => p.id !== options.where.id);
-      saveToDatabase(db);
-    }
+  static async destroy(options: { where: { id?: string } }) {
+    return await Product.destroy(options);
   }
 }
 
 export class CartModel {
-  static findAll(options: {
+  static async findAll(options: {
     where?: { userId?: string };
     include?: any[];
     order?: any[];
-  }): (CartItem & { product?: Product; Product?: Product })[] {
-    const db = getDatabase();
-    let cartItems = [...db.cart_items];
-
-    if (options.where?.userId) {
-      cartItems = cartItems.filter(item => item.userId === options.where!.userId);
-    }
-
-    // Include product associations
-    if (options.include) {
-      cartItems = cartItems.map(item => {
-        const product = db.products.find(p => p.id === item.productId);
-        return { ...item, product, Product: product };
-      });
-    }
-
-    // Sorting
-    if (options.order) {
-      cartItems.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
-
-    return cartItems;
+  }) {
+    return await CartItem.findAll(options);
   }
 
-  static findOne(options: { where: { userId: string; productId: string } }): CartItem | null {
-    const db = getDatabase();
-    return db.cart_items.find(item =>
-      item.userId === options.where.userId && item.productId === options.where.productId
-    ) || null;
+  static async findOne(options: { where: { userId: string; productId: string } }) {
+    return await CartItem.findOne(options);
   }
 
-  static async create(data: Omit<CartItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<CartItem> {
-    const db = getDatabase();
-    const newItem: CartItem = {
-      id: require('uuid').v4(),
-      ...data,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    db.cart_items.push(newItem);
-    saveToDatabase(db);
-    return newItem;
+  static async create(data: any) {
+    return await CartItem.create(data);
   }
 
-  static async save(item: CartItem): Promise<void> {
-    const db = getDatabase();
-    const index = db.cart_items.findIndex(i => i.id === item.id);
-    if (index !== -1) {
-      db.cart_items[index] = { ...item, updatedAt: new Date().toISOString() };
-      saveToDatabase(db);
-    }
+  static async save(item: any) {
+    return await item.save();
   }
 
-  static async destroy(options: { where: { userId?: string; productId?: string } }): Promise<void> {
-    const db = getDatabase();
-    if (options.where.userId && options.where.productId) {
-      db.cart_items = db.cart_items.filter(item =>
-        !(item.userId === options.where!.userId && item.productId === options.where!.productId)
-      );
-    } else if (options.where.userId) {
-      db.cart_items = db.cart_items.filter(item => item.userId !== options.where!.userId);
-    }
-    saveToDatabase(db);
+  static async destroy(options: { where: { userId?: string; productId?: string } }) {
+    return await CartItem.destroy(options);
   }
 }
 
 export class OrderModel {
-  static findAll(options: {
+  static async findAll(options: {
     where?: { userId?: string };
     include?: any[];
     order?: any[];
-  }): (Order & { user?: User; User?: User; items?: OrderItem[]; order_items?: OrderItem[] })[] {
-    const db = getDatabase();
-    let orders = [...db.orders];
-
-    if (options.where?.userId) {
-      orders = orders.filter(order => order.userId === options.where!.userId);
-    }
-
-    // Include associations
-    if (options.include) {
-      orders = orders.map(order => {
-        const user = db.users.find(u => u.id === order.userId);
-        const items = db.order_items.filter(item => item.orderId === order.id);
-        return { ...order, user, User: user, items, order_items: items };
-      });
-    }
-
-    // Sorting
-    if (options.order) {
-      orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
-
-    return orders;
+  }) {
+    return await Order.findAll(options);
   }
 
-  static findByPk(id: string, options?: { include?: any[] }): (Order & { user?: User; User?: User; items?: OrderItem[]; order_items?: OrderItem[] }) | null {
-    const db = getDatabase();
-    const order = db.orders.find(o => o.id === id);
-    if (!order) return null;
-
-    if (options?.include) {
-      const user = db.users.find(u => u.id === order.userId);
-      const items = db.order_items.filter(item => item.orderId === order.id);
-      return { ...order, user, User: user, items, order_items: items };
-    }
-
-    return order;
+  static async findByPk(id: string, options?: { include?: any[] }) {
+    return await Order.findByPk(id, options);
   }
 
-  static async create(data: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Promise<Order> {
-    const db = getDatabase();
-    const newOrder: Order = {
-      id: require('uuid').v4(),
-      ...data,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    db.orders.push(newOrder);
-    saveToDatabase(db);
-    return newOrder;
+  static async create(data: any) {
+    return await Order.create(data);
   }
 
-  static async save(order: Order): Promise<void> {
-    const db = getDatabase();
-    const index = db.orders.findIndex(o => o.id === order.id);
-    if (index !== -1) {
-      db.orders[index] = { ...order, updatedAt: new Date().toISOString() };
-      saveToDatabase(db);
-    }
+  static async save(order: any) {
+    return await order.save();
   }
 }
 
 export class OrderItemModel {
-  static findAll(options: {
+  static async findAll(options: {
     where?: { orderId?: string };
     include?: any[];
-  }): (OrderItem & { product?: Product; Product?: Product })[] {
-    const db = getDatabase();
-    let items = [...db.order_items];
-
-    if (options.where?.orderId) {
-      items = items.filter(item => item.orderId === options.where!.orderId);
-    }
-
-    // Include product associations
-    if (options.include) {
-      items = items.map(item => {
-        const product = db.products.find(p => p.id === item.productId);
-        return { ...item, product, Product: product };
-      });
-    }
-
-    return items;
+  }) {
+    return await OrderItem.findAll(options);
   }
 
-  static async create(data: Omit<OrderItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<OrderItem> {
-    const db = getDatabase();
-    const newItem: OrderItem = {
-      id: require('uuid').v4(),
-      ...data,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    db.order_items.push(newItem);
-    saveToDatabase(db);
-    return newItem;
+  static async create(data: any) {
+    return await OrderItem.create(data);
   }
 }
 

@@ -7,8 +7,7 @@ exports.resolvers = exports.typeDefs = void 0;
 const apollo_server_express_1 = require("apollo-server-express");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const setup_1 = require("./database/setup");
-const sequelize_1 = require("sequelize");
+const operations_1 = require("./database/operations");
 exports.typeDefs = (0, apollo_server_express_1.gql) `
   type User {
     id: ID!
@@ -85,6 +84,7 @@ exports.typeDefs = (0, apollo_server_express_1.gql) `
     orders: [Order!]!
     users: [User!]! # For admin
     allOrders: [Order!]! # For admin
+    adminProducts: [Product!]! # For admin
   }
 
   type Mutation {
@@ -136,7 +136,7 @@ const getUser = async (req) => {
         return null;
     try {
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || "your-secret-key-123456789");
-        const user = await setup_1.User.findByPk(decoded.userId);
+        const user = await operations_1.User.findByPk(decoded.userId);
         return user;
     }
     catch (error) {
@@ -153,16 +153,12 @@ exports.resolvers = {
                     where.category = category;
                 }
                 if (search) {
-                    where[sequelize_1.Op.or] = [
-                        { name: { [sequelize_1.Op.like]: `%${search}%` } },
-                        { description: { [sequelize_1.Op.like]: `%${search}%` } },
-                    ];
+                    where.name = { [require('sequelize').Op.iLike]: `%${search}%` };
                 }
-                const products = await setup_1.Product.findAll({
+                const products = await operations_1.Product.findAll({
                     where,
                     limit: Math.min(limit, 100), // Cap at 100
                     offset: Math.max(offset, 0),
-                    order: [["createdAt", "DESC"]],
                 });
                 return products;
             }
@@ -173,7 +169,7 @@ exports.resolvers = {
         },
         product: async (_, { id }) => {
             try {
-                const product = await setup_1.Product.findByPk(id);
+                const product = await operations_1.Product.findByPk(id);
                 if (!product) {
                     throw new Error("Product not found");
                 }
@@ -192,10 +188,9 @@ exports.resolvers = {
             if (!user)
                 throw new Error("Not authenticated");
             try {
-                return setup_1.Cart.findAll({
+                return operations_1.Cart.findAll({
                     where: { userId: user.id },
-                    include: [{ model: setup_1.Product }],
-                    order: [["createdAt", "DESC"]],
+                    include: [{ model: operations_1.Product }],
                 });
             }
             catch (error) {
@@ -208,13 +203,13 @@ exports.resolvers = {
             if (!user)
                 throw new Error("Not authenticated");
             try {
-                return setup_1.Order.findAll({
+                return operations_1.Order.findAll({
                     where: { userId: user.id },
                     include: [
-                        { model: setup_1.User },
+                        { model: operations_1.User },
                         {
-                            model: setup_1.OrderItem,
-                            include: [{ model: setup_1.Product }],
+                            model: operations_1.OrderItem,
+                            include: [{ model: operations_1.Product }],
                         },
                     ],
                     order: [["createdAt", "DESC"]],
@@ -231,7 +226,7 @@ exports.resolvers = {
                 throw new Error("Admin access required");
             }
             try {
-                return setup_1.User.findAll({
+                return operations_1.User.findAll({
                     order: [["createdAt", "DESC"]],
                 });
             }
@@ -246,12 +241,12 @@ exports.resolvers = {
                 throw new Error("Admin access required");
             }
             try {
-                return setup_1.Order.findAll({
+                return operations_1.Order.findAll({
                     include: [
-                        { model: setup_1.User },
+                        { model: operations_1.User },
                         {
-                            model: setup_1.OrderItem,
-                            include: [{ model: setup_1.Product }],
+                            model: operations_1.OrderItem,
+                            include: [{ model: operations_1.Product }],
                         },
                     ],
                     order: [["createdAt", "DESC"]],
@@ -260,6 +255,31 @@ exports.resolvers = {
             catch (error) {
                 console.error("Error fetching all orders:", error);
                 throw new Error("Failed to fetch all orders");
+            }
+        },
+        adminProducts: async (_, __, { req }) => {
+            const user = await getUser(req);
+            if (!user || user.role !== "admin") {
+                throw new Error("Admin access required");
+            }
+            try {
+                // Get distinct categories by fetching all products and extracting categories
+                const allProducts = await operations_1.Product.findAll();
+                const categories = [...new Set(allProducts.map(p => p.category))];
+                // Fetch up to 6 products from each category
+                const products = [];
+                for (const category of categories) {
+                    const categoryProducts = await operations_1.Product.findAll({
+                        where: { category },
+                        limit: 6
+                    });
+                    products.push(...categoryProducts);
+                }
+                return products;
+            }
+            catch (error) {
+                console.error("Error fetching admin products:", error);
+                throw new Error("Failed to fetch products");
             }
         },
     },
@@ -274,7 +294,7 @@ exports.resolvers = {
                     throw new Error("Password must be at least 6 characters long");
                 }
                 // Check if user already exists
-                const existingUser = await setup_1.User.findOne({
+                const existingUser = await operations_1.User.findOne({
                     where: { email: email.toLowerCase() },
                 });
                 if (existingUser) {
@@ -283,7 +303,7 @@ exports.resolvers = {
                 // Hash password
                 const hashedPassword = await bcryptjs_1.default.hash(password, 12);
                 // Create user
-                const user = await setup_1.User.create({
+                const user = await operations_1.User.create({
                     email: email.toLowerCase().trim(),
                     password: hashedPassword,
                     firstName: firstName.trim(),
@@ -308,7 +328,7 @@ exports.resolvers = {
                     throw new Error("Email and password are required");
                 }
                 // Find user
-                const user = await setup_1.User.findOne({
+                const user = await operations_1.User.findOne({
                     where: { email: email.toLowerCase().trim() },
                 });
                 if (!user) {
@@ -334,32 +354,28 @@ exports.resolvers = {
             if (!user)
                 throw new Error("Not authenticated");
             try {
-                const product = await setup_1.Product.findByPk(productId);
+                const product = await operations_1.Product.findByPk(productId);
                 if (!product)
                     throw new Error("Product not found");
                 if (product.stock < quantity) {
                     throw new Error("Not enough stock available");
                 }
                 // Check if item already exists in cart
-                const existingCartItem = await setup_1.Cart.findOne({
+                const existingCartItem = await operations_1.Cart.findOne({
                     where: { userId: user.id, productId },
                 });
                 if (existingCartItem) {
                     existingCartItem.quantity += quantity;
-                    await existingCartItem.save();
-                    return setup_1.Cart.findByPk(existingCartItem.id, {
-                        include: [{ model: setup_1.Product }],
-                    });
+                    await operations_1.Cart.save(existingCartItem);
+                    return existingCartItem;
                 }
                 else {
-                    const cartItem = await setup_1.Cart.create({
+                    const cartItem = await operations_1.Cart.create({
                         userId: user.id,
                         productId,
                         quantity,
                     });
-                    return setup_1.Cart.findByPk(cartItem.id, {
-                        include: [{ model: setup_1.Product }],
-                    });
+                    return cartItem;
                 }
             }
             catch (error) {
@@ -372,20 +388,18 @@ exports.resolvers = {
             if (!user)
                 throw new Error("Not authenticated");
             try {
-                const cartItem = await setup_1.Cart.findOne({
+                const cartItem = await operations_1.Cart.findOne({
                     where: { userId: user.id, productId },
                 });
                 if (!cartItem)
                     throw new Error("Cart item not found");
                 if (quantity <= 0) {
-                    await cartItem.destroy();
+                    await operations_1.Cart.destroy({ where: { userId: user.id, productId } });
                     return null;
                 }
                 cartItem.quantity = quantity;
-                await cartItem.save();
-                return setup_1.Cart.findByPk(cartItem.id, {
-                    include: [{ model: setup_1.Product }],
-                });
+                await operations_1.Cart.save(cartItem);
+                return cartItem;
             }
             catch (error) {
                 console.error("Update cart error:", error);
@@ -397,12 +411,7 @@ exports.resolvers = {
             if (!user)
                 throw new Error("Not authenticated");
             try {
-                const cartItem = await setup_1.Cart.findOne({
-                    where: { userId: user.id, productId },
-                });
-                if (!cartItem)
-                    throw new Error("Cart item not found");
-                await cartItem.destroy();
+                await operations_1.Cart.destroy({ where: { userId: user.id, productId } });
                 return true;
             }
             catch (error) {
@@ -415,7 +424,7 @@ exports.resolvers = {
             if (!user)
                 throw new Error("Not authenticated");
             try {
-                await setup_1.Cart.destroy({ where: { userId: user.id } });
+                await operations_1.Cart.destroy({ where: { userId: user.id } });
                 return true;
             }
             catch (error) {
@@ -443,9 +452,9 @@ exports.resolvers = {
                 throw new Error("Not authenticated");
             try {
                 // Get cart items with product association
-                const cartItems = await setup_1.Cart.findAll({
+                const cartItems = await operations_1.Cart.findAll({
                     where: { userId: user.id },
-                    include: [{ model: setup_1.Product, as: "Product" }],
+                    include: [{ model: operations_1.Product, as: "Product" }],
                 });
                 if (cartItems.length === 0) {
                     throw new Error("Cart is empty");
@@ -453,7 +462,7 @@ exports.resolvers = {
                 // Calculate total - FIX: Properly access Product association
                 let total = 0;
                 for (const item of cartItems) {
-                    const product = await setup_1.Product.findByPk(item.productId);
+                    const product = await operations_1.Product.findByPk(item.productId);
                     if (product) {
                         total += parseFloat(String(product.price)) * item.quantity;
                     }
@@ -463,7 +472,7 @@ exports.resolvers = {
                 const shipping = total > 50 ? 0 : 5.99;
                 total = total + tax + shipping;
                 // Create order
-                const order = await setup_1.Order.create({
+                const order = await operations_1.Order.create({
                     userId: user.id,
                     total: total,
                     status: "pending",
@@ -476,9 +485,9 @@ exports.resolvers = {
                 });
                 // Create order items
                 for (const cartItem of cartItems) {
-                    const product = await setup_1.Product.findByPk(cartItem.productId);
+                    const product = await operations_1.Product.findByPk(cartItem.productId);
                     if (product) {
-                        await setup_1.OrderItem.create({
+                        await operations_1.OrderItem.create({
                             orderId: order.id,
                             productId: cartItem.productId,
                             quantity: cartItem.quantity,
@@ -486,18 +495,18 @@ exports.resolvers = {
                         });
                         // Update stock
                         product.stock -= cartItem.quantity;
-                        await product.save();
+                        await operations_1.Product.save(product);
                     }
                 }
                 // Clear cart
-                await setup_1.Cart.destroy({ where: { userId: user.id } });
+                await operations_1.Cart.destroy({ where: { userId: user.id } });
                 // Return order with associations
-                return await setup_1.Order.findByPk(order.id, {
+                return await operations_1.Order.findByPk(order.id, {
                     include: [
-                        { model: setup_1.User },
+                        { model: operations_1.User },
                         {
-                            model: setup_1.OrderItem,
-                            include: [{ model: setup_1.Product }],
+                            model: operations_1.OrderItem,
+                            include: [{ model: operations_1.Product }],
                         },
                     ],
                 });
@@ -512,7 +521,7 @@ exports.resolvers = {
             if (!user)
                 throw new Error("Not authenticated");
             try {
-                const order = await setup_1.Order.findByPk(id);
+                const order = await operations_1.Order.findByPk(id);
                 if (!order)
                     throw new Error("Order not found");
                 // Only allow users to cancel their own orders or admins to update any order
@@ -520,13 +529,13 @@ exports.resolvers = {
                     throw new Error("Not authorized");
                 }
                 order.status = status;
-                await order.save();
-                return setup_1.Order.findByPk(order.id, {
+                await operations_1.Order.save(order);
+                return operations_1.Order.findByPk(order.id, {
                     include: [
-                        { model: setup_1.User },
+                        { model: operations_1.User },
                         {
-                            model: setup_1.OrderItem,
-                            include: [{ model: setup_1.Product }],
+                            model: operations_1.OrderItem,
+                            include: [{ model: operations_1.Product }],
                         },
                     ],
                 });
@@ -541,14 +550,15 @@ exports.resolvers = {
             if (!user)
                 throw new Error("Not authenticated");
             try {
+                const updateData = {};
                 if (firstName)
-                    user.firstName = firstName.trim();
+                    updateData.firstName = firstName.trim();
                 if (lastName)
-                    user.lastName = lastName.trim();
+                    updateData.lastName = lastName.trim();
                 if (phone !== undefined)
-                    user.phone = phone ? phone.trim() : null;
-                await user.save();
-                return user;
+                    updateData.phone = phone ? phone.trim() : null;
+                await operations_1.User.save({ ...user, ...updateData });
+                return await operations_1.User.findByPk(user.id);
             }
             catch (error) {
                 console.error("Update profile error:", error);
@@ -562,7 +572,7 @@ exports.resolvers = {
                 throw new Error("Admin access required");
             }
             try {
-                const product = await setup_1.Product.create({
+                const product = await operations_1.Product.create({
                     name: name.trim(),
                     description: description ? description.trim() : null,
                     price,
@@ -584,7 +594,7 @@ exports.resolvers = {
                 throw new Error("Admin access required");
             }
             try {
-                const product = await setup_1.Product.findByPk(id);
+                const product = await operations_1.Product.findByPk(id);
                 if (!product)
                     throw new Error("Product not found");
                 if (name)
@@ -599,7 +609,7 @@ exports.resolvers = {
                     product.image = image || null;
                 if (stock !== undefined)
                     product.stock = stock;
-                await product.save();
+                await operations_1.Product.save(product);
                 return product;
             }
             catch (error) {
@@ -613,10 +623,10 @@ exports.resolvers = {
                 throw new Error("Admin access required");
             }
             try {
-                const product = await setup_1.Product.findByPk(id);
+                const product = await operations_1.Product.findByPk(id);
                 if (!product)
                     throw new Error("Product not found");
-                await product.destroy();
+                await operations_1.Product.destroy({ where: { id } });
                 console.log("✅ Admin deleted product:", product.name);
                 return true;
             }
