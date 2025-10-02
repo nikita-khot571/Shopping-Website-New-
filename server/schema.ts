@@ -2,6 +2,7 @@ import { gql } from "apollo-server-express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { User, Product, Cart, Order, OrderItem } from "./database/operations";
+import { v4 as uuidv4 } from "uuid";
 
 export const typeDefs = gql`
   type User {
@@ -124,6 +125,7 @@ export const typeDefs = gql`
     deleteProduct(id: ID!): Boolean!
   }
 `;
+
 
 // Authentication middleware
 const getUser = async (req: any) => {
@@ -497,7 +499,7 @@ export const resolvers = {
         // Get cart items with product association
         const cartItems = await Cart.findAll({
           where: { userId: user.id },
-          include: [{ model: Product, as: "Product" }],
+          include: [{ model: Product }],
         });
 
         if (cartItems.length === 0) {
@@ -634,13 +636,17 @@ export const resolvers = {
       }
 
       try {
+        const now = new Date();
         const product = await Product.create({
+          id: uuidv4(),
           name: name.trim(),
           description: description ? description.trim() : null,
           price,
           category,
           image: image || null,
           stock,
+          createdAt: now,
+          updatedAt: now,
         });
 
         console.log("✅ Admin created product:", product.name);

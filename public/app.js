@@ -38,7 +38,7 @@ class ShopZoneApp {
   }
   async checkBackendAvailability() {
     try {
-      const response = await fetch("http://localhost:4000/graphql", {
+      const response = await fetch("http://localhost:4001/graphql", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -48,7 +48,7 @@ class ShopZoneApp {
       this.backendAvailable = response.ok;
     } catch (error) {
       this.backendAvailable = false;
-      console.warn("⚠️ Backend not available, using mock data");
+      console.warn("⚠️ Backend not available");
     }
   }
   // Mock products data for development
@@ -151,17 +151,36 @@ class ShopZoneApp {
 
   async loadProducts() {
     try {
-      const response = await fetch('../db.json');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      const response = await fetch("http://localhost:4001/graphql", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `
+            query GetProducts {
+              products {
+                id
+                name
+                description
+                price
+                category
+                image
+                stock
+                createdAt
+              }
+            }
+          `,
+        }),
+      });
       const data = await response.json();
-      this.products = data.products;
+      if (data.errors) {
+        throw new Error(data.errors.map((err) => err.message).join(", "));
+      }
+      this.products = data.data.products;
       this.backendAvailable = true;
     } catch (error) {
-      console.log("Failed to load products from db.json, using mock data:", error.message);
+      console.log("Failed to load products from backend:", error.message);
       this.backendAvailable = false;
-      this.loadMockProducts();
+      this.products = [];
     }
   }
 
@@ -203,8 +222,9 @@ class ShopZoneApp {
     const container = document.getElementById("categoryContainer");
     if (!container) return;
 
-    // Get unique categories from products
-    const categories = ["all", ...new Set(this.products.map(product => product.category))];
+    // Get unique categories from products using uniqueCategories variable to avoid duplicates
+    const uniqueCategories = [...new Set(this.products.map(p => p.category))];
+    const categories = ["all", ...uniqueCategories];
 
     container.innerHTML = categories
       .map(
@@ -289,7 +309,7 @@ class ShopZoneApp {
     // Clear backend cart if user is logged in
     if (this.currentUser && this.backendAvailable && window.graphqlService) {
       try {
-        await window.graphqlService.clearCart(this.currentUser.id);
+        await window.graphqlService.clearCart();
       } catch (error) {
         console.error("Failed to clear cart on logout:", error);
         // Continue with logout even if cart clearing fails
@@ -306,7 +326,7 @@ class ShopZoneApp {
     this.currentUser = null;
 
     // Clear GraphQL service auth state
-    if (window.graphqlService) {
+    if (window.graphqlService && typeof window.graphqlService.logout === 'function') {
       window.graphqlService.logout();
     }
 
@@ -320,9 +340,9 @@ class ShopZoneApp {
   }
 
   async loadCartFromBackend() {
-    if (this.currentUser && this.backendAvailable && window.graphqlService) {
+    if (this.currentUser && this.backendAvailable && window.graphqlService && typeof window.graphqlService.getCart === 'function') {
       try {
-        const cartData = await window.graphqlService.getCart(this.currentUser.id);
+        const cartData = await window.graphqlService.getCart();
         // Transform backend cart data to match local format
         this.cart = cartData.cart.items.map(item => ({
           ...item.product,
@@ -344,9 +364,9 @@ class ShopZoneApp {
     let addedViaGraphQL = false;
 
     // If user is logged in and backend is available, use GraphQL
-    if (this.currentUser && this.backendAvailable && window.graphqlService) {
+    if (this.currentUser && this.backendAvailable && window.graphqlService && typeof window.graphqlService.addToCart === 'function') {
       try {
-        await window.graphqlService.addToCart(this.currentUser.id, productId, 1);
+        await window.graphqlService.addToCart(productId, 1);
         this.showToast(`${product.name} added to cart!`, "success");
         // Refresh cart from backend
         await this.loadCartFromBackend();
@@ -380,14 +400,14 @@ class ShopZoneApp {
 
   async updateCartQuantity(productId, change) {
     // If user is logged in and backend is available, use GraphQL
-    if (this.currentUser && this.backendAvailable && window.graphqlService) {
+    if (this.currentUser && this.backendAvailable && window.graphqlService && typeof window.graphqlService.updateCartItem === 'function') {
       try {
         const newQuantity = this.cart.find(item => item.id === productId)?.quantity + change || change;
         if (newQuantity <= 0) {
           await this.removeFromCart(productId);
           return;
         }
-        await window.graphqlService.updateCartItem(this.currentUser.id, productId, newQuantity);
+        await window.graphqlService.updateCartItem(productId, newQuantity);
         await this.loadCartFromBackend();
         return;
       } catch (error) {
@@ -414,9 +434,9 @@ class ShopZoneApp {
 
   async removeFromCart(productId) {
     // If user is logged in and backend is available, use GraphQL
-    if (this.currentUser && this.backendAvailable && window.graphqlService) {
+    if (this.currentUser && this.backendAvailable && window.graphqlService && typeof window.graphqlService.removeFromCart === 'function') {
       try {
-        await window.graphqlService.removeFromCart(this.currentUser.id, productId);
+        await window.graphqlService.removeFromCart(productId);
         await this.loadCartFromBackend();
         return;
       } catch (error) {
@@ -578,11 +598,11 @@ class ShopZoneApp {
 
 // Global functions
 async function filterByCategory(category) {
-  if (window.shopZone) {
+  if (window.shopZone && typeof window.shopZone.loadProducts === 'function' && typeof window.shopZone.renderProducts === 'function') {
     window.shopZone.currentCategory = category;
 
     // Reload products from backend if available
-    if (window.shopZone.backendAvailable && window.graphqlService) {
+    if (window.shopZone.backendAvailable && window.graphqlService && typeof window.graphqlService.loadProducts === 'function') {
       try {
         await window.shopZone.loadProducts();
       } catch (error) {
@@ -606,11 +626,11 @@ async function filterByCategory(category) {
 
 async function searchProducts() {
   const searchInput = document.getElementById("searchInput");
-  if (searchInput && window.shopZone) {
+  if (searchInput && window.shopZone && typeof window.shopZone.loadProducts === 'function' && typeof window.shopZone.renderProducts === 'function') {
     window.shopZone.searchQuery = searchInput.value.toLowerCase();
 
     // Reload products from backend if available
-    if (window.shopZone.backendAvailable && window.graphqlService) {
+    if (window.shopZone.backendAvailable && window.graphqlService && typeof window.graphqlService.loadProducts === 'function') {
       try {
         await window.shopZone.loadProducts();
       } catch (error) {

@@ -523,6 +523,18 @@
                     notes: ''
                 };
                 
+                // Get payment method
+                const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+
+                // Prepare shipping address as JSON string
+                const shippingAddress = JSON.stringify({
+                    street: document.getElementById('shippingAddress').value,
+                    city: document.getElementById('shippingCity').value,
+                    state: document.getElementById('shippingState').value,
+                    zipCode: document.getElementById('shippingZip').value,
+                    country: 'India' // Assuming country is India
+                });
+
                 const response = await fetch('/graphql', {
                     method: 'POST',
                     headers: {
@@ -531,8 +543,8 @@
                     },
                     body: JSON.stringify({
                         query: `
-                            mutation CreateOrder($input: OrderInput!) {
-                                createOrder(input: $input) {
+                            mutation CreateOrder($shippingAddress: String!, $paymentMethod: String!) {
+                                createOrder(shippingAddress: $shippingAddress, paymentMethod: $paymentMethod) {
                                     id
                                     total
                                     status
@@ -541,7 +553,8 @@
                             }
                         `,
                         variables: {
-                            input: orderInput
+                            shippingAddress,
+                            paymentMethod
                         }
                     })
                 });

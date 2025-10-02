@@ -1,6 +1,6 @@
 // GraphQL Client for ShopZone E-commerce
 class GraphQLClient {
-    constructor(endpoint = 'http://localhost:4000/graphql') {
+    constructor(endpoint = 'http://localhost:4001/graphql') {
         this.endpoint = endpoint;
         this.headers = {
             'Content-Type': 'application/json',
@@ -165,22 +165,21 @@ const GraphQLQueries = {
 
     // Cart Queries
     GET_CART: `
-        query GetCart($userId: ID!) {
-            cart(userId: $userId) {
+        query GetCart {
+            cart {
                 id
-                items {
+                userId
+                productId
+                quantity
+                product {
                     id
-                    product {
-                        id
-                        name
-                        description
-                        price
-                        image
-                        stock
-                    }
-                    quantity
+                    name
+                    description
+                    price
+                    image
+                    stock
                 }
-                total
+                createdAt
                 updatedAt
             }
         }
@@ -310,18 +309,15 @@ const GraphQLMutations = {
     `,
 
     CLEAR_CART: `
-        mutation ClearCart($userId: ID!) {
-            clearCart(userId: $userId) {
-                success
-                message
-            }
+        mutation ClearCart {
+            clearCart
         }
     `,
 
     // Order Mutations
     CREATE_ORDER: `
-        mutation CreateOrder($input: OrderInput!) {
-            createOrder(input: $input) {
+        mutation CreateOrder($shippingAddress: String!, $paymentMethod: String!) {
+            createOrder(shippingAddress: $shippingAddress, paymentMethod: $paymentMethod) {
                 id
                 status
                 total
@@ -334,17 +330,8 @@ const GraphQLMutations = {
                     quantity
                     price
                 }
-                shippingAddress {
-                    street
-                    city
-                    state
-                    zipCode
-                    country
-                }
-                paymentMethod {
-                    type
-                    lastFour
-                }
+                shippingAddress
+                paymentMethod
                 createdAt
             }
         }
@@ -541,25 +528,22 @@ class GraphQLService {
     }
 
     // Cart Services
-    async addToCart(userId, productId, quantity = 1) {
+    async addToCart(productId, quantity = 1) {
         return this.client.mutation(GraphQLMutations.ADD_TO_CART, {
-            userId,
             productId,
             quantity: parseInt(quantity, 10)
         });
     }
 
-    async updateCartItem(userId, productId, quantity) {
+    async updateCartItem(productId, quantity) {
         return this.client.mutation(GraphQLMutations.UPDATE_CART_ITEM, {
-            userId,
             productId,
             quantity: parseInt(quantity, 10)
         });
     }
 
-    async removeFromCart(userId, productId) {
+    async removeFromCart(productId) {
         return this.client.mutation(GraphQLMutations.REMOVE_FROM_CART, {
-            userId,
             productId
         });
     }
@@ -569,14 +553,15 @@ class GraphQLService {
         return result;
     }
 
-    async clearCart(userId) {
-        return this.client.mutation(GraphQLMutations.CLEAR_CART, { userId });
+    async clearCart() {
+        return this.client.mutation(GraphQLMutations.CLEAR_CART);
     }
 
     // Order Services
-    async createOrder(orderData) {
+    async createOrder(shippingAddress, paymentMethod) {
         return this.client.mutation(GraphQLMutations.CREATE_ORDER, {
-            input: orderData
+            shippingAddress,
+            paymentMethod
         });
     }
 
@@ -747,15 +732,7 @@ const GraphQLTypes = {
         }
     `,
 
-    OrderInput: `
-        input OrderInput {
-            userId: ID!
-            items: [OrderItemInput!]!
-            shippingAddressId: ID!
-            paymentMethodId: ID!
-            notes: String
-        }
-    `,
+
 
     OrderItemInput: `
         input OrderItemInput {
