@@ -1,7 +1,7 @@
 import { gql } from "apollo-server-express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { User, Product, Cart, Order, OrderItem } from "./database/operations";
+import { User, Product, CartItem as Cart, Order, OrderItem } from "./database/models";
 import { v4 as uuidv4 } from "uuid";
 
 export const typeDefs = gql`
@@ -402,13 +402,16 @@ export const resolvers = {
 
         if (existingCartItem) {
           existingCartItem.quantity += quantity;
-          await Cart.save(existingCartItem);
+          await existingCartItem.save();
           return existingCartItem;
         } else {
           const cartItem = await Cart.create({
+            id: uuidv4(),
             userId: user.id,
             productId,
             quantity,
+            createdAt: new Date(),
+            updatedAt: new Date(),
           });
           return cartItem;
         }
@@ -439,7 +442,7 @@ export const resolvers = {
         }
 
         cartItem.quantity = quantity;
-        await Cart.save(cartItem);
+          await cartItem.save();
         return cartItem;
       } catch (error: any) {
         console.error("Update cart error:", error);
@@ -522,6 +525,7 @@ export const resolvers = {
 
         // Create order
         const order = await Order.create({
+          id: uuidv4(),
           userId: user.id,
           total: total,
           status: "pending",
@@ -533,6 +537,8 @@ export const resolvers = {
             typeof paymentMethod === "string"
               ? paymentMethod
               : JSON.stringify(paymentMethod),
+          createdAt: new Date(),
+          updatedAt: new Date(),
         });
 
         // Create order items
@@ -540,15 +546,18 @@ export const resolvers = {
           const product = await Product.findByPk(cartItem.productId);
           if (product) {
             await OrderItem.create({
+              id: uuidv4(),
               orderId: order.id,
               productId: cartItem.productId,
               quantity: cartItem.quantity,
               price: parseFloat(String(product.price)),
+              createdAt: new Date(),
+              updatedAt: new Date(),
             });
 
             // Update stock
             product.stock -= cartItem.quantity;
-            await Product.save(product);
+            await product.save();
           }
         }
 
@@ -585,7 +594,7 @@ export const resolvers = {
         }
 
         order.status = status;
-        await Order.save(order);
+        await order.save();
 
         return Order.findByPk(order.id, {
           include: [
@@ -616,7 +625,7 @@ export const resolvers = {
         if (lastName) updateData.lastName = lastName.trim();
         if (phone !== undefined) updateData.phone = phone ? phone.trim() : null;
 
-        await User.save({ ...user, ...updateData });
+        await user.save();
         return await User.findByPk(user.id);
       } catch (error: any) {
         console.error("Update profile error:", error);
@@ -679,7 +688,7 @@ export const resolvers = {
         if (image !== undefined) product.image = image || null;
         if (stock !== undefined) product.stock = stock;
 
-        await Product.save(product);
+        await product.save();
         return product;
       } catch (error: any) {
         console.error("Update product error:", error);

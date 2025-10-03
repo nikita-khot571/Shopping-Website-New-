@@ -373,8 +373,8 @@ class ShopZoneApp {
         addedViaGraphQL = true;
         return;
       } catch (error) {
-        console.error("Failed to add to cart via GraphQL:", error);
-        this.showToast("Failed to add to cart, using local storage", "warning");
+       //  console.error("Failed to add to cart via GraphQL:", error);
+       // this.showToast("Failed to add to cart, using local storage", "warning");
       }
     }
 

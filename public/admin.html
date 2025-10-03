@@ -269,7 +269,7 @@
                         </div>
                     </div>
                     
-                    <div class="card mb-4">
+                   <!-- <div class="card mb-4">
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-4 mb-3">
@@ -301,7 +301,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     
                     <div class="card admin-card">
                         <div class="card-body">
@@ -343,7 +343,7 @@
                         </button>
                     </div>
                     
-                    <div class="card mb-4">
+                  <!--  <div class="card mb-4">
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-3 mb-3">
@@ -377,7 +377,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     
                     <div class="card admin-card">
                         <div class="card-body">
@@ -419,7 +419,7 @@
                         </button>
                     </div>
                     
-                    <div class="card mb-4">
+                   <!-- <div class="card mb-4">
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-4 mb-3">
@@ -451,7 +451,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     
                     <div class="card admin-card">
                         <div class="card-body">
@@ -485,68 +485,7 @@
                     </div>
                 </div>
 
-                <!-- Analytics section removed as per user request -->
-                <!--
-                <div id="analyticsSection" class="section-content" style="display: none;">
-                    <h2 class="mb-4"><i class="fas fa-chart-bar me-2"></i>Analytics & Reports</h2>
-                    
-                    <div class="row mb-4">
-                        <div class="col-lg-8 mb-4">
-                            <div class="card admin-card">
-                                <div class="card-header">
-                                    <h5><i class="fas fa-chart-line me-2"></i>Sales Overview</h5>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="salesChart" width="400" height="200"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-4 mb-4">
-                            <div class="card admin-card">
-                                <div class="card-header">
-                                    <h5><i class="fas fa-trophy me-2"></i>Top Products</h5>
-                                </div>
-                                <div class="card-body" id="topProductsContainer">
-                                    <div class="loading-spinner">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-lg-6 mb-4">
-                            <div class="card admin-card">
-                                <div class="card-header">
-                                    <h5><i class="fas fa-tags me-2"></i>Category Performance</h5>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="categoryChart" width="400" height="300"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-6 mb-4">
-                            <div class="card admin-card">
-                                <div class="card-header">
-                                    <h5><i class="fas fa-history me-2"></i>Recent Activity</h5>
-                                </div>
-                                <div class="card-body" id="recentActivityContainer">
-                                    <div class="loading-spinner">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                -->
+               
             </div>
         </div>
     </div>
@@ -696,10 +635,9 @@
                 loadRecentOrders();
                 loadOrderStatusChart();
                 loadTopProducts();
-                loadRecentActivity();
+                loadRecentActivity(); 
             } catch (error) {
-                console.error('Failed to load dashboard data:', error);
-                showToast('Failed to load dashboard data', 'danger');
+               // showToast('Failed to load dashboard data', 'danger');
             }
         }
 
@@ -798,7 +736,7 @@
                 renderOrdersTable();
             } catch (error) {
                 console.error('Error loading orders:', error);
-                showToast(`Failed to load orders: ${error.message}`, 'danger');
+              //   showToast(`Failed to load orders: ${error.message}`, 'danger');
             }
         }
 

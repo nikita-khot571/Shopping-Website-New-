@@ -492,37 +492,18 @@
 
         async function placeOrder() {
             const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            
+
             if (!currentUser.id) {
                 alert('Please login to place an order');
                 window.location.href = 'login.html';
                 return;
             }
-            
+
             const placeOrderBtn = document.getElementById('placeOrderBtn');
             placeOrderBtn.disabled = true;
             placeOrderBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Placing Order...';
-            
+
             try {
-                // Prepare order input object
-                const orderInput = {
-                    userId: currentUser.id,
-                    items: checkoutData.items.map(item => ({
-                        productId: item.id,
-                        quantity: item.quantity,
-                        price: parseFloat(item.price)
-                    })),
-                    shippingAddress: {
-                        street: document.getElementById('shippingAddress').value,
-                        city: document.getElementById('shippingCity').value,
-                        state: document.getElementById('shippingState').value,
-                        zipCode: document.getElementById('shippingZip').value,
-                        country: 'India' // Assuming country is India, can be extended to form input
-                    },
-                    paymentMethodId: null, // Assuming payment method ID is not used, can be extended
-                    notes: ''
-                };
-                
                 // Get payment method
                 const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
 
@@ -535,55 +516,27 @@
                     country: 'India' // Assuming country is India
                 });
 
-                const response = await fetch('/graphql', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                    },
-                    body: JSON.stringify({
-                        query: `
-                            mutation CreateOrder($shippingAddress: String!, $paymentMethod: String!) {
-                                createOrder(shippingAddress: $shippingAddress, paymentMethod: $paymentMethod) {
-                                    id
-                                    total
-                                    status
-                                    createdAt
-                                }
-                            }
-                        `,
-                        variables: {
-                            shippingAddress,
-                            paymentMethod
-                        }
-                    })
-                });
-                
-                const data = await response.json();
-                if (data.errors) {
-                    throw new Error(data.errors[0].message);
-                }
-                
-                const order = data.data.createOrder;
-                
+                // Use GraphQLService to create order
+                const order = await window.graphqlService.createOrder(shippingAddress, paymentMethod);
+
                 // Show success modal
                 document.getElementById('confirmationOrderId').textContent = `#${order.id.slice(-8)}`;
                 const modal = new bootstrap.Modal(document.getElementById('orderConfirmationModal'));
                 modal.show();
-                
+
                 // Clear cart and checkout data
                 localStorage.removeItem('cart');
                 localStorage.removeItem('checkoutData');
-                
+
                 // Update cart count
                 if (window.shopZone) {
                     window.shopZone.cart = [];
                     window.shopZone.updateCartCount();
                 }
-                
+
             } catch (error) {
                 console.error('Error placing order:', error);
-                showToast('Failed to place order: ' + error.message, 'danger');
+             //   showToast('Failed to place order: ' + error.message, 'danger');
             } finally {
                 placeOrderBtn.disabled = false;
                 placeOrderBtn.innerHTML = '<i class="fas fa-shopping-cart me-2"></i>Place Order';
