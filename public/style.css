@@ -27,6 +27,12 @@ body {
     font-weight: bold;
     color: var(--primary-blue) !important;
     text-decoration: none;
+} 
+.brand-name-black {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #e8dcdc !important;
+    text-decoration: none;
 }
 
 .navbar-brand:hover {

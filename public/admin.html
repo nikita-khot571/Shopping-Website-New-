@@ -82,18 +82,18 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-white bg-primary shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
         <div class="container-fluid">
-            <a class="navbar-brand" href="index.html">
+            <a class="brand-name-black" href="index.html">
                 <i class="fas fa-shield-alt me-2"></i>ShopZone Admin
             </a>
             
             <div class="navbar-nav ms-auto flex-row">
-                <span class="navbar-text me-3">
-                    <i class="fas fa-user-circle me-1"></i>
+                <span class="navbar-text me-3 ">
+                    <i class="fas fa-user-circle me-1 "></i>
                     <span id="adminName">Admin</span>
                 </span>
-                <a class="nav-link me-3" href="index.html">
+                <a class="nav-link me-3 " href="index.html">
                     <i class="fas fa-store me-1"></i>View Store
                 </a>
                 <button class="btn btn-outline-light btn-sm" onclick="logout()">
@@ -129,14 +129,7 @@
                                 <i class="fas fa-users me-2"></i>Users
                             </a>
                         </li>
-                        <!-- Analytics menu removed as per user request -->
-                        <!--
-                        <li class="nav-item mb-1">
-                            <a class="nav-link" href="#analytics" onclick="showSection('analytics', event)">
-                                <i class="fas fa-chart-bar me-2"></i>Analytics
-                            </a>
-                        </li>
-                        -->
+                       
                     </ul>
                 </div>
             </div>
@@ -269,39 +262,7 @@
                         </div>
                     </div>
                     
-                   <!-- <div class="card mb-4">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <input type="text" class="form-control" id="productSearchInput" placeholder="Search products...">
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    <select class="form-control" id="productCategoryFilter">
-                                        <option value="">All Categories</option>
-                                        <option value="electronics">Electronics</option>
-                                        <option value="books">Books</option>
-                                        <option value="clothing">Clothing</option>
-                                        <option value="home">Home</option>
-                                        <option value="sports">Sports</option>
-                                        <option value="toys">Toys</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    <select class="form-control" id="productStockFilter">
-                                        <option value="">All Stock Levels</option>
-                                        <option value="instock">In Stock</option>
-                                        <option value="lowstock">Low Stock (≤10)</option>
-                                        <option value="outofstock">Out of Stock</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-2 mb-3">
-                                    <button class="btn btn-outline-primary w-100" onclick="filterProducts()">
-                                        <i class="fas fa-search"></i> Filter
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div> -->
+                   
                     
                     <div class="card admin-card">
                         <div class="card-body">
@@ -343,41 +304,7 @@
                         </button>
                     </div>
                     
-                  <!--  <div class="card mb-4">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-3 mb-3">
-                                    <input type="text" class="form-control" id="orderSearchInput" placeholder="Search by Order ID or Customer...">
-                                </div>
-                                <div class="col-md-2 mb-3">
-                                    <select class="form-control" id="orderStatusFilter">
-                                        <option value="">All Status</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="processing">Processing</option>
-                                        <option value="shipped">Shipped</option>
-                                        <option value="delivered">Delivered</option>
-                                        <option value="cancelled">Cancelled</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-2 mb-3">
-                                    <input type="date" class="form-control" id="orderDateFrom" placeholder="From Date">
-                                </div>
-                                <div class="col-md-2 mb-3">
-                                    <input type="date" class="form-control" id="orderDateTo" placeholder="To Date">
-                                </div>
-                                <div class="col-md-2 mb-3">
-                                    <button class="btn btn-outline-primary w-100" onclick="filterOrders()">
-                                        <i class="fas fa-search"></i> Filter
-                                    </button>
-                                </div>
-                                <div class="col-md-1 mb-3">
-                                    <button class="btn btn-outline-secondary w-100" onclick="clearOrderFilters()" title="Clear Filters">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div> -->
+                  
                     
                     <div class="card admin-card">
                         <div class="card-body">
@@ -419,40 +346,7 @@
                         </button>
                     </div>
                     
-                   <!-- <div class="card mb-4">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <input type="text" class="form-control" id="userSearchInput" placeholder="Search by name or email...">
-                                </div>
-                                <div class="col-md-2 mb-3">
-                                    <select class="form-control" id="userRoleFilter">
-                                        <option value="">All Roles</option>
-                                        <option value="admin">Admin</option>
-                                        <option value="customer">Customer</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-2 mb-3">
-                                    <select class="form-control" id="userActivityFilter">
-                                        <option value="">All Users</option>
-                                        <option value="active">Active Users</option>
-                                        <option value="inactive">Inactive Users</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-2 mb-3">
-                                    <button class="btn btn-outline-primary w-100" onclick="filterUsers()">
-                                        <i class="fas fa-search"></i> Filter
-                                    </button>
-                                </div>
-                                <div class="col-md-2 mb-3">
-                                    <button class="btn btn-outline-secondary w-100" onclick="clearUserFilters()" title="Clear Filters">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div> -->
-                    
+                   
                     <div class="card admin-card">
                         <div class="card-body">
                             <div class="table-responsive">
@@ -637,7 +531,7 @@
                 loadTopProducts();
                 loadRecentActivity(); 
             } catch (error) {
-               // showToast('Failed to load dashboard data', 'danger');
+                showToast('Failed to load dashboard data', 'danger');
             }
         }
 
@@ -736,7 +630,7 @@
                 renderOrdersTable();
             } catch (error) {
                 console.error('Error loading orders:', error);
-              //   showToast(`Failed to load orders: ${error.message}`, 'danger');
+                 showToast(`Failed to load orders: ${error.message}`, 'danger');
             }
         }
 

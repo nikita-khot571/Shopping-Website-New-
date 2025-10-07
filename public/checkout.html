@@ -536,7 +536,7 @@
 
             } catch (error) {
                 console.error('Error placing order:', error);
-             //   showToast('Failed to place order: ' + error.message, 'danger');
+                showToast('Failed to place order: ' + error.message, 'danger');
             } finally {
                 placeOrderBtn.disabled = false;
                 placeOrderBtn.innerHTML = '<i class="fas fa-shopping-cart me-2"></i>Place Order';
