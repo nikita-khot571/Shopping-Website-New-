@@ -459,9 +459,9 @@
                 loadRecentOrders();
                 loadOrderStatusChart();
                 loadTopProducts();
-                loadRecentActivity(); 
             } catch (error) {
-                showToast('Failed to load dashboard data', 'danger');
+                console.error('Dashboard data loading error:', error);
+               //  showToast('Failed to load dashboard data', 'danger');
             }
         }
 
@@ -636,7 +636,7 @@
                         <div>
                             <h6 class="mb-1">Order #${order.id.slice(-8)}</h6>
                             <small class="text-muted">
-                                <i class="fas fa-user me-1"></i>${order.user.firstName} ${order.user.lastName}
+                                <i class="fas fa-user me-1"></i>${order.user ? `${order.user.firstName} ${order.user.lastName}` : 'Unknown User'}
                             </small>
                             <small class="text-muted ms-2">
                                 <i class="fas fa-clock me-1"></i>${new Date(order.createdAt).toLocaleDateString()}
@@ -648,7 +648,7 @@
                         </div>
                     </div>
                     <div class="mt-2">
-                        <small class="text-muted">${order.items.length} item(s)</small>
+                        <small class="text-muted">${order.items ? order.items.length : 0} item(s)</small>
                         <button class="btn btn-sm btn-outline-primary float-end" onclick="viewOrder('${order.id}')">
                             View Details
                         </button>
@@ -726,17 +726,21 @@
             // Calculate product sales from orders
             const productSales = {};
             orders.forEach(order => {
-                order.items.forEach(item => {
-                    if (!productSales[item.product.id]) {
-                        productSales[item.product.id] = {
-                            name: item.product.name,
-                            quantity: 0,
-                            revenue: 0
-                        };
-                    }
-                    productSales[item.product.id].quantity += item.quantity;
-                    productSales[item.product.id].revenue += item.quantity * parseFloat(item.price);
-                });
+                if (order.items && Array.isArray(order.items)) {
+                    order.items.forEach(item => {
+                        if (item.product && item.product.id) {
+                            if (!productSales[item.product.id]) {
+                                productSales[item.product.id] = {
+                                    name: item.product.name,
+                                    quantity: 0,
+                                    revenue: 0
+                                };
+                            }
+                            productSales[item.product.id].quantity += item.quantity;
+                            productSales[item.product.id].revenue += item.quantity * parseFloat(item.price);
+                        }
+                    });
+                }
             });
             
             const topProducts = Object.values(productSales)
@@ -769,13 +773,15 @@
             
             // Add recent orders
             orders.slice(0, 3).forEach(order => {
-                activities.push({
-                    type: 'order',
-                    icon: 'fa-shopping-cart',
-                    color: 'primary',
-                    message: `New order #${order.id.slice(-8)} from ${order.user.firstName}`,
-                    time: order.createdAt
-                });
+                if (order.user && order.user.firstName) {
+                    activities.push({
+                        type: 'order',
+                        icon: 'fa-shopping-cart',
+                        color: 'primary',
+                        message: `New order #${order.id.slice(-8)} from ${order.user.firstName}`,
+                        time: order.createdAt
+                    });
+                }
             });
             
             // Add recent user registrations

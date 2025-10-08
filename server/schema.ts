@@ -239,40 +239,10 @@ export const resolvers = {
       try {
         const orders = await Order.findAll({
           where: { userId: user.id },
-          include: [
-            { model: User },
-            {
-              model: OrderItem,
-              required: false, // LEFT JOIN
-              include: [
-                { 
-                  model: Product,
-                  required: false // LEFT JOIN
-                }
-              ],
-            },
-          ],
           order: [["createdAt", "DESC"]],
         });
 
-        // Filter out orders with no valid items
-        const validOrders = orders.map(order => {
-          const orderData = order.toJSON() as any;
-          
-          // Filter out order items with deleted products
-          if (orderData.OrderItems) {
-            orderData.OrderItems = orderData.OrderItems.filter((item: any) => {
-              return item.Product !== null && item.Product !== undefined;
-            });
-          }
-          
-          return orderData;
-        }).filter(order => {
-          // Keep orders that have at least one valid item
-          return order.OrderItems && order.OrderItems.length > 0;
-        });
-
-        return validOrders;
+        return orders;
       } catch (error) {
         console.error("Error fetching orders:", error);
         throw new Error("Failed to fetch orders");
@@ -298,45 +268,18 @@ export const resolvers = {
     allOrders: async (_: any, __: any, { req }: any) => {
       const user = await getUser(req);
       if (!user || user.role !== "admin") {
+        console.log("Admin access required - user:", user ? user.email : 'null', 'role:', user ? user.role : 'null');
         throw new Error("Admin access required");
       }
 
       try {
+        console.log("Fetching all orders for admin:", user.email);
         const orders = await Order.findAll({
-          include: [
-            { model: User },
-            {
-              model: OrderItem,
-              required: false, // LEFT JOIN
-              include: [
-                { 
-                  model: Product,
-                  required: false // LEFT JOIN
-                }
-              ],
-            },
-          ],
           order: [["createdAt", "DESC"]],
         });
 
-        // Filter and clean order data
-        const validOrders = orders.map(order => {
-          const orderData = order.toJSON() as any;
-          
-          // Filter out order items with deleted products
-          if (orderData.OrderItems) {
-            orderData.OrderItems = orderData.OrderItems.filter((item: any) => {
-              return item.Product !== null && item.Product !== undefined;
-            });
-          }
-          
-          return orderData;
-        }).filter(order => {
-          // Keep orders that have at least one valid item
-          return order.OrderItems && order.OrderItems.length > 0;
-        });
-
-        return validOrders;
+        console.log(`Found ${orders.length} orders`);
+        return orders;
       } catch (error) {
         console.error("Error fetching all orders:", error);
         throw new Error("Failed to fetch all orders");
@@ -822,6 +765,57 @@ export const resolvers = {
       } catch (error: any) {
         console.error("Delete product error:", error);
         throw new Error(error.message || "Failed to delete product");
+      }
+    },
+  },
+
+  // Field resolvers for Order type
+  Order: {
+    items: async (order: any) => {
+      try {
+        if (!order || !order.id) {
+          console.log("Order or order.id is missing:", order);
+          return [];
+        }
+        
+        const orderItems = await OrderItem.findAll({
+          where: { orderId: order.id },
+          include: [{ model: Product }],
+        });
+        
+        console.log(`Found ${orderItems.length} items for order ${order.id}`);
+        return orderItems;
+      } catch (error) {
+        console.error("Error fetching order items:", error);
+        return [];
+      }
+    },
+    user: async (order: any) => {
+      try {
+        if (!order || !order.userId) {
+          console.log("Order or order.userId is missing:", order);
+          return null;
+        }
+        
+        const user = await User.findByPk(order.userId);
+        console.log(`Found user for order ${order.id}:`, user ? user.email : 'null');
+        return user;
+      } catch (error) {
+        console.error("Error fetching order user:", error);
+        return null;
+      }
+    },
+  },
+
+  // Field resolvers for OrderItem type
+  OrderItem: {
+    product: async (orderItem: any) => {
+      try {
+        const product = await Product.findByPk(orderItem.productId);
+        return product;
+      } catch (error) {
+        console.error("Error fetching order item product:", error);
+        return null;
       }
     },
   },

@@ -14,8 +14,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "strictPropertyInitialization": false,
-    "noImplicitAny": false,
-    "ignoreDeprecations": "6.0"
+    "noImplicitAny": false
   },
   "include": ["server/**/*"],
   "exclude": ["node_modules", "dist", "public"]
