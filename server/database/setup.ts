@@ -4,6 +4,7 @@ import { initProductModel, Product } from "./models";
 import { initCartItemModel, CartItem } from "./models";
 import { initOrderModel, Order } from "./models";
 import { initOrderItemModel, OrderItem } from "./models";
+import { initAddressModel, Address } from "./models";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 
@@ -12,6 +13,7 @@ initProductModel(sequelize);
 initCartItemModel(sequelize);
 initOrderModel(sequelize);
 initOrderItemModel(sequelize);
+initAddressModel(sequelize);
 
 // Define associations
 User.hasMany(Order, { foreignKey: 'userId' });
@@ -28,6 +30,10 @@ CartItem.belongsTo(User, { foreignKey: 'userId' });
 
 Order.hasMany(OrderItem, { foreignKey: 'orderId' });
 OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
+
+// Addresses associations
+User.hasMany(Address, { foreignKey: 'userId' });
+Address.belongsTo(User, { foreignKey: 'userId' });
 
 export async function setupDatabase() {
   try {

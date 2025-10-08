@@ -19,6 +19,7 @@ exports.typeDefs = (0, apollo_server_express_1.gql) `
     role: String!
     createdAt: String!
     updatedAt: String!
+    addresses: [Address!]
   }
 
   type Product {
@@ -38,7 +39,7 @@ exports.typeDefs = (0, apollo_server_express_1.gql) `
     userId: ID!
     productId: ID!
     quantity: Int!
-    product: Product!
+    product: Product
     createdAt: String!
     updatedAt: String!
   }
@@ -67,6 +68,34 @@ exports.typeDefs = (0, apollo_server_express_1.gql) `
     updatedAt: String!
   }
 
+  type Address {
+    id: ID!
+    userId: ID!
+    label: String!
+    firstName: String!
+    lastName: String!
+    street: String!
+    city: String!
+    state: String!
+    zipCode: String!
+    country: String!
+    isDefault: Boolean!
+    createdAt: String!
+    updatedAt: String!
+  }
+
+  input AddressInput {
+    label: String!
+    firstName: String!
+    lastName: String!
+    street: String!
+    city: String!
+    state: String!
+    zipCode: String!
+    country: String!
+    isDefault: Boolean
+  }
+
   type AuthPayload {
     token: String!
     user: User!
@@ -86,6 +115,7 @@ exports.typeDefs = (0, apollo_server_express_1.gql) `
     users: [User!]!
     allOrders: [Order!]!
     adminProducts: [Product!]!
+    addresses: [Address!]!
   }
 
   type Mutation {
@@ -127,6 +157,10 @@ exports.typeDefs = (0, apollo_server_express_1.gql) `
       stock: Int
     ): Product!
     deleteProduct(id: ID!): Boolean!
+
+    addAddress(input: AddressInput!): Address!
+    updateAddress(id: ID!, input: AddressInput!): Address!
+    deleteAddress(id: ID!): Boolean!
   }
 `;
 // Authentication middleware
@@ -295,6 +329,12 @@ exports.resolvers = {
                 console.error("Error fetching admin products:", error);
                 throw new Error("Failed to fetch products");
             }
+        },
+        addresses: async (_, __, { req }) => {
+            const user = await getUser(req);
+            if (!user)
+                throw new Error("Not authenticated");
+            return models_1.Address.findAll({ where: { userId: user.id }, order: [["createdAt", "DESC"]] });
         },
     },
     Mutation: {
@@ -684,6 +724,57 @@ exports.resolvers = {
                 console.error("Delete product error:", error);
                 throw new Error(error.message || "Failed to delete product");
             }
+        },
+        addAddress: async (_, { input }, { req }) => {
+            const user = await getUser(req);
+            if (!user)
+                throw new Error("Not authenticated");
+            const now = new Date();
+            const created = await models_1.Address.create({
+                id: (0, uuid_1.v4)(),
+                userId: user.id,
+                label: input.label,
+                firstName: input.firstName,
+                lastName: input.lastName,
+                street: input.street,
+                city: input.city,
+                state: input.state,
+                zipCode: input.zipCode,
+                country: input.country,
+                isDefault: !!input.isDefault,
+                createdAt: now,
+                updatedAt: now,
+            });
+            return created;
+        },
+        updateAddress: async (_, { id, input }, { req }) => {
+            const user = await getUser(req);
+            if (!user)
+                throw new Error("Not authenticated");
+            const address = await models_1.Address.findByPk(id);
+            if (!address || address.userId !== user.id)
+                throw new Error("Address not found");
+            Object.assign(address, {
+                label: input.label,
+                firstName: input.firstName,
+                lastName: input.lastName,
+                street: input.street,
+                city: input.city,
+                state: input.state,
+                zipCode: input.zipCode,
+                country: input.country,
+                isDefault: input.isDefault ?? address.isDefault,
+                updatedAt: new Date(),
+            });
+            await address.save();
+            return address;
+        },
+        deleteAddress: async (_, { id }, { req }) => {
+            const user = await getUser(req);
+            if (!user)
+                throw new Error("Not authenticated");
+            const deleted = await models_1.Address.destroy({ where: { id, userId: user.id } });
+            return deleted > 0;
         },
     },
     // Field resolvers for Order type

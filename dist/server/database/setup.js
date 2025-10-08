@@ -10,6 +10,7 @@ const models_2 = require("./models");
 const models_3 = require("./models");
 const models_4 = require("./models");
 const models_5 = require("./models");
+const models_6 = require("./models");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const uuid_1 = require("uuid");
 (0, models_1.initUserModel)(sequelize_1.default);
@@ -17,6 +18,7 @@ const uuid_1 = require("uuid");
 (0, models_3.initCartItemModel)(sequelize_1.default);
 (0, models_4.initOrderModel)(sequelize_1.default);
 (0, models_5.initOrderItemModel)(sequelize_1.default);
+(0, models_6.initAddressModel)(sequelize_1.default);
 // Define associations
 models_1.User.hasMany(models_4.Order, { foreignKey: 'userId' });
 models_4.Order.belongsTo(models_1.User, { foreignKey: 'userId' });
@@ -28,6 +30,9 @@ models_1.User.hasMany(models_3.CartItem, { foreignKey: 'userId' });
 models_3.CartItem.belongsTo(models_1.User, { foreignKey: 'userId' });
 models_4.Order.hasMany(models_5.OrderItem, { foreignKey: 'orderId' });
 models_5.OrderItem.belongsTo(models_4.Order, { foreignKey: 'orderId' });
+// Addresses associations
+models_1.User.hasMany(models_6.Address, { foreignKey: 'userId' });
+models_6.Address.belongsTo(models_1.User, { foreignKey: 'userId' });
 async function setupDatabase() {
     try {
         await sequelize_1.default.authenticate();

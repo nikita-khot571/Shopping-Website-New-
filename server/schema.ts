@@ -1,7 +1,7 @@
 import { gql } from "apollo-server-express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { User, Product, CartItem as Cart, Order, OrderItem } from "./database/models";
+import { User, Product, CartItem as Cart, Order, OrderItem, Address } from "./database/models";
 import { v4 as uuidv4 } from "uuid";
 
 export const typeDefs = gql`
@@ -14,6 +14,7 @@ export const typeDefs = gql`
     role: String!
     createdAt: String!
     updatedAt: String!
+    addresses: [Address!]
   }
 
   type Product {
@@ -33,7 +34,7 @@ export const typeDefs = gql`
     userId: ID!
     productId: ID!
     quantity: Int!
-    product: Product!
+    product: Product
     createdAt: String!
     updatedAt: String!
   }
@@ -62,6 +63,34 @@ export const typeDefs = gql`
     updatedAt: String!
   }
 
+  type Address {
+    id: ID!
+    userId: ID!
+    label: String!
+    firstName: String!
+    lastName: String!
+    street: String!
+    city: String!
+    state: String!
+    zipCode: String!
+    country: String!
+    isDefault: Boolean!
+    createdAt: String!
+    updatedAt: String!
+  }
+
+  input AddressInput {
+    label: String!
+    firstName: String!
+    lastName: String!
+    street: String!
+    city: String!
+    state: String!
+    zipCode: String!
+    country: String!
+    isDefault: Boolean
+  }
+
   type AuthPayload {
     token: String!
     user: User!
@@ -81,6 +110,7 @@ export const typeDefs = gql`
     users: [User!]!
     allOrders: [Order!]!
     adminProducts: [Product!]!
+    addresses: [Address!]!
   }
 
   type Mutation {
@@ -122,6 +152,10 @@ export const typeDefs = gql`
       stock: Int
     ): Product!
     deleteProduct(id: ID!): Boolean!
+
+    addAddress(input: AddressInput!): Address!
+    updateAddress(id: ID!, input: AddressInput!): Address!
+    deleteAddress(id: ID!): Boolean!
   }
 `;
 
@@ -308,6 +342,12 @@ export const resolvers = {
         console.error("Error fetching admin products:", error);
         throw new Error("Failed to fetch products");
       }
+    },
+
+    addresses: async (_: any, __: any, { req }: any) => {
+      const user = await getUser(req);
+      if (!user) throw new Error("Not authenticated");
+      return Address.findAll({ where: { userId: user.id }, order: [["createdAt", "DESC"]] });
     },
   },
 
@@ -766,6 +806,56 @@ export const resolvers = {
         console.error("Delete product error:", error);
         throw new Error(error.message || "Failed to delete product");
       }
+    },
+
+    addAddress: async (_: any, { input }: any, { req }: any) => {
+      const user = await getUser(req);
+      if (!user) throw new Error("Not authenticated");
+      const now = new Date();
+      const created = await Address.create({
+        id: uuidv4(),
+        userId: user.id,
+        label: input.label,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        street: input.street,
+        city: input.city,
+        state: input.state,
+        zipCode: input.zipCode,
+        country: input.country,
+        isDefault: !!input.isDefault,
+        createdAt: now,
+        updatedAt: now,
+      });
+      return created;
+    },
+
+    updateAddress: async (_: any, { id, input }: any, { req }: any) => {
+      const user = await getUser(req);
+      if (!user) throw new Error("Not authenticated");
+      const address = await Address.findByPk(id);
+      if (!address || (address as any).userId !== user.id) throw new Error("Address not found");
+      Object.assign(address, {
+        label: input.label,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        street: input.street,
+        city: input.city,
+        state: input.state,
+        zipCode: input.zipCode,
+        country: input.country,
+        isDefault: input.isDefault ?? (address as any).isDefault,
+        updatedAt: new Date(),
+      });
+      await (address as any).save();
+      return address;
+    },
+
+    deleteAddress: async (_: any, { id }: any, { req }: any) => {
+      const user = await getUser(req);
+      if (!user) throw new Error("Not authenticated");
+      const deleted = await Address.destroy({ where: { id, userId: user.id } });
+      return deleted > 0;
     },
   },
 

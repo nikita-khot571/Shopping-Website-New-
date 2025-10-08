@@ -340,3 +340,108 @@ export function initOrderItemModel(sequelize: Sequelize) {
     }
   );
 }
+
+// Address Model
+interface AddressAttributes {
+  id: string;
+  userId: string;
+  label: string;
+  firstName: string;
+  lastName: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  isDefault: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface AddressCreationAttributes
+  extends Optional<AddressAttributes, "id" | "isDefault" | "createdAt" | "updatedAt"> {}
+
+export class Address
+  extends Model<AddressAttributes, AddressCreationAttributes>
+  implements AddressAttributes
+{
+  public id!: string;
+  public userId!: string;
+  public label!: string;
+  public firstName!: string;
+  public lastName!: string;
+  public street!: string;
+  public city!: string;
+  public state!: string;
+  public zipCode!: string;
+  public country!: string;
+  public isDefault!: boolean;
+  public createdAt!: Date;
+  public updatedAt!: Date;
+}
+
+export function initAddressModel(sequelize: Sequelize) {
+  Address.init(
+    {
+      id: {
+        type: DataTypes.STRING(36),
+        primaryKey: true,
+        allowNull: false,
+      },
+      userId: {
+        type: DataTypes.STRING(36),
+        allowNull: false,
+      },
+      label: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      firstName: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      lastName: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      street: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+      },
+      city: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      state: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      zipCode: {
+        type: DataTypes.STRING(20),
+        allowNull: false,
+      },
+      country: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      isDefault: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+    },
+    {
+      sequelize,
+      tableName: "addresses",
+      timestamps: false,
+    }
+  );
+}

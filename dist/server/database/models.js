@@ -1,11 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OrderItem = exports.Order = exports.CartItem = exports.Product = exports.User = void 0;
+exports.Address = exports.OrderItem = exports.Order = exports.CartItem = exports.Product = exports.User = void 0;
 exports.initUserModel = initUserModel;
 exports.initProductModel = initProductModel;
 exports.initCartItemModel = initCartItemModel;
 exports.initOrderModel = initOrderModel;
 exports.initOrderItemModel = initOrderItemModel;
+exports.initAddressModel = initAddressModel;
 const sequelize_1 = require("sequelize");
 class User extends sequelize_1.Model {
 }
@@ -221,6 +222,71 @@ function initOrderItemModel(sequelize) {
     }, {
         sequelize,
         tableName: "order_items",
+        timestamps: false,
+    });
+}
+class Address extends sequelize_1.Model {
+}
+exports.Address = Address;
+function initAddressModel(sequelize) {
+    Address.init({
+        id: {
+            type: sequelize_1.DataTypes.STRING(36),
+            primaryKey: true,
+            allowNull: false,
+        },
+        userId: {
+            type: sequelize_1.DataTypes.STRING(36),
+            allowNull: false,
+        },
+        label: {
+            type: sequelize_1.DataTypes.STRING(100),
+            allowNull: false,
+        },
+        firstName: {
+            type: sequelize_1.DataTypes.STRING(100),
+            allowNull: false,
+        },
+        lastName: {
+            type: sequelize_1.DataTypes.STRING(100),
+            allowNull: false,
+        },
+        street: {
+            type: sequelize_1.DataTypes.STRING(255),
+            allowNull: false,
+        },
+        city: {
+            type: sequelize_1.DataTypes.STRING(100),
+            allowNull: false,
+        },
+        state: {
+            type: sequelize_1.DataTypes.STRING(100),
+            allowNull: false,
+        },
+        zipCode: {
+            type: sequelize_1.DataTypes.STRING(20),
+            allowNull: false,
+        },
+        country: {
+            type: sequelize_1.DataTypes.STRING(100),
+            allowNull: false,
+        },
+        isDefault: {
+            type: sequelize_1.DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+        },
+        createdAt: {
+            type: sequelize_1.DataTypes.DATE,
+            allowNull: false,
+        },
+        updatedAt: {
+            type: sequelize_1.DataTypes.DATE,
+            allowNull: false,
+        },
+    }, {
+        sequelize,
+        tableName: "addresses",
         timestamps: false,
     });
 }
