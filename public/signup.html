@@ -114,20 +114,10 @@
       }
 
       function showLoading(show) {
-        if (data.data?.register) {
-          const { token, user } = data.data.register;
-
-          // Store authentication data
-          localStorage.setItem("authToken", token);
-          localStorage.setItem("currentUser", JSON.stringify(user));
-
-          showSuccess("Account created successfully! Redirecting to login...");
-
-          // Redirect to LOGIN page (not index)
-          setTimeout(() => {
-            window.location.href = "login.html"; // CHANGED from index.html
-          }, 2000);
-        }
+        const btn = document.querySelector('#signupForm button[type="submit"]');
+        if (!btn) return;
+        btn.disabled = !!show;
+        btn.innerHTML = show ? '<span class="spinner-border spinner-border-sm me-2"></span>Creating Account…' : 'Create Account';
       }
 
       document
@@ -197,20 +187,11 @@
             }
 
             if (data.data?.register) {
-              const { token, user } = data.data.register;
-
-              // Store authentication data
-              localStorage.setItem("authToken", token);
-              localStorage.setItem("currentUser", JSON.stringify(user));
-
-              showSuccess(
-                "Account created successfully! Redirecting to login..."
-              );
-
-              // Redirect to main page after success
+              showSuccess("Account created successfully! Redirecting to login...");
+              // After signup, send user to login page
               setTimeout(() => {
-                window.location.href = "index.html";
-              }, 2000);
+                window.location.href = "login.html";
+              }, 1200);
             } else {
               throw new Error(
                 "Registration failed: Invalid response from server"

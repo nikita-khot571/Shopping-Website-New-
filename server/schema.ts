@@ -374,13 +374,17 @@ export const resolvers = {
 
         const hashedPassword = await bcrypt.hash(password, 12);
 
+        const now = new Date();
         const user = await User.create({
+          id: uuidv4(),
           email: email.toLowerCase().trim(),
           password: hashedPassword,
           firstName: firstName.trim(),
           lastName: lastName.trim(),
           phone: phone ? phone.trim() : null,
           role: "customer",
+          createdAt: now,
+          updatedAt: now,
         });
 
         const token = jwt.sign(
