@@ -516,6 +516,21 @@
                     country: 'India' // Assuming country is India
                 });
 
+                // Ensure backend cart matches frontend selections to avoid removed items being charged
+                if (window.graphqlService && window.graphqlService.isAuthenticated && window.graphqlService.isAuthenticated()) {
+                    try {
+                        await window.graphqlService.clearCart();
+                        const itemsToSync = (checkoutData && Array.isArray(checkoutData.items)) ? checkoutData.items : (window.shopZone ? window.shopZone.cart : []);
+                        for (const item of itemsToSync) {
+                            if (item && item.id && item.quantity > 0) {
+                                await window.graphqlService.addToCart(item.id, item.quantity);
+                            }
+                        }
+                    } catch (syncErr) {
+                        console.warn('Cart sync warning:', syncErr);
+                    }
+                }
+
                 // Use GraphQLService to create order
                 const order = await window.graphqlService.createOrder(shippingAddress, paymentMethod);
 

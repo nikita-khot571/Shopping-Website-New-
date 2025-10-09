@@ -549,11 +549,11 @@ export const resolvers = {
       if (!user) throw new Error("Not authenticated");
 
       try {
-        // Get cart items with product association
+        // Get fresh cart items with product association (only those still present)
         const cartItems = await Cart.findAll({
           where: { userId: user.id },
           include: [
-            { 
+            {
               model: Product,
               required: false
             }
@@ -561,10 +561,23 @@ export const resolvers = {
         });
 
         // Filter valid cart items (with existing products)
+        // Also coalesce duplicate productIds by summing quantities, in case of rapid client updates
         const validCartItems = cartItems.filter(item => {
           const product = (item as any).Product || (item as any).product;
           return product !== null && product !== undefined;
         });
+
+        // Collapse duplicates (defensive)
+        const byProduct: Record<string, any> = {};
+        for (const item of validCartItems) {
+          const key = String((item as any).productId);
+          if (!byProduct[key]) {
+            byProduct[key] = item;
+          } else {
+            byProduct[key].quantity += (item as any).quantity;
+          }
+        }
+        const itemsNormalized = Object.values(byProduct);
 
         if (validCartItems.length === 0) {
           // Clean up any orphaned cart items
@@ -576,7 +589,7 @@ export const resolvers = {
         let subtotal = 0;
         const itemsToProcess = [];
 
-        for (const item of validCartItems) {
+        for (const item of itemsNormalized as any[]) {
           const product = await Product.findByPk(item.productId);
           
           if (!product) {
@@ -642,7 +655,7 @@ export const resolvers = {
           console.log(`   ✓ ${product.name} - Qty: ${cartItem.quantity}, Stock remaining: ${product.stock}`);
         }
 
-        // Clear entire cart (including any orphaned items)
+        // Clear entire cart once order is created
         await Cart.destroy({ where: { userId: user.id } });
         console.log(`🧹 Cart cleared for user ${user.email}`);
 
