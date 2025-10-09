@@ -829,6 +829,10 @@ export const resolvers = {
       const user = await getUser(req);
       if (!user) throw new Error("Not authenticated");
       const now = new Date();
+      // If setting default, unset all other defaults for this user
+      if (input.isDefault) {
+        await Address.update({ isDefault: false }, { where: { userId: user.id } });
+      }
       const created = await Address.create({
         id: uuidv4(),
         userId: user.id,
@@ -852,6 +856,10 @@ export const resolvers = {
       if (!user) throw new Error("Not authenticated");
       const address = await Address.findByPk(id);
       if (!address || (address as any).userId !== user.id) throw new Error("Address not found");
+      // If toggling default on, unset others first
+      if (input.isDefault === true) {
+        await Address.update({ isDefault: false }, { where: { userId: user.id } });
+      }
       Object.assign(address, {
         label: input.label,
         firstName: input.firstName,

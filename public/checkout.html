@@ -507,13 +507,34 @@
                 // Get payment method
                 const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
 
-                // Prepare shipping address as JSON string
-                const shippingAddress = JSON.stringify({
+                // Prepare shipping address. If user has a default address, prefer it.
+                let defaultAddress = null;
+                try {
+                    const resp = await fetch('http://localhost:4001/graphql', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                        },
+                        body: JSON.stringify({ query: `query GetAddresses { addresses { id label firstName lastName street city state zipCode country isDefault } }` })
+                    });
+                    const addrData = await resp.json();
+                    const addresses = addrData?.data?.addresses || [];
+                    defaultAddress = addresses.find(a => a.isDefault);
+                } catch(_) {}
+
+                const shippingAddress = JSON.stringify(defaultAddress ? {
+                    street: defaultAddress.street,
+                    city: defaultAddress.city,
+                    state: defaultAddress.state,
+                    zipCode: defaultAddress.zipCode,
+                    country: defaultAddress.country
+                } : {
                     street: document.getElementById('shippingAddress').value,
                     city: document.getElementById('shippingCity').value,
                     state: document.getElementById('shippingState').value,
                     zipCode: document.getElementById('shippingZip').value,
-                    country: 'India' // Assuming country is India
+                    country: 'India'
                 });
 
                 // Ensure backend cart matches frontend selections to avoid removed items being charged
