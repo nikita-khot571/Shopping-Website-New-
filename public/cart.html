@@ -84,13 +84,22 @@
     <script src="app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            if (window.shopZone) {
-                window.shopZone.loadCartItems();
-                window.shopZone.updateCartCount();
-            }
+            // Wait for shopZone to be initialized
+            const checkShopZone = () => {
+                if (window.shopZone) {
+                    window.shopZone.loadCartItems();
+                    window.shopZone.updateCartCount();
+                } else {
+                    // Retry after a short delay if shopZone is not ready
+                    setTimeout(checkShopZone, 100);
+                }
+            };
+            checkShopZone();
             
-            // Update auth links
-            updateAuthLinks();
+            // Update auth links (use centralized implementation in app.js)
+            if (typeof updateAuthLinks === 'function') {
+                updateAuthLinks();
+            }
             
             // Setup checkout button
             setupCheckoutButton();

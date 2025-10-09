@@ -8,6 +8,7 @@ class ShopZoneApp {
     this.backendAvailable = false;
     this.checkBackendAvailability();
     this.searchQuery = "";
+    console.log("ShopZone initialized with cart:", this.cart);
     this.init();
   }
 
@@ -21,11 +22,8 @@ class ShopZoneApp {
       // Load cart from backend if user is logged in
       if (this.currentUser && this.backendAvailable) {
         await this.loadCartFromBackend();
-      } else {
-        // Clear local cart if no user is logged in
-        this.cart = [];
-        localStorage.removeItem("cart");
       }
+      // Keep local cart for non-logged-in users
 
       this.updateCartCount();
       this.setupEventListeners();
@@ -343,12 +341,42 @@ class ShopZoneApp {
     if (this.currentUser && this.backendAvailable && window.graphqlService && typeof window.graphqlService.getCart === 'function') {
       try {
         const cartData = await window.graphqlService.getCart();
+        console.log("Raw cart data from backend:", cartData);
+        
         // Transform backend cart data to match local format
-        this.cart = cartData.cart.items.map(item => ({
-          ...item.product,
-          quantity: item.quantity,
-          addedAt: new Date().toISOString(),
-        }));
+        // Support both shapes: { cart: [...] } and { cart: { items: [...] } }
+        const backendItems = Array.isArray(cartData?.cart)
+          ? cartData.cart
+          : Array.isArray(cartData?.cart?.items)
+            ? cartData.cart.items
+            : [];
+
+        this.cart = backendItems.map(item => {
+          console.log("Processing cart item:", item);
+          // Prefer embedded product, otherwise find from loaded products
+          const productFromItem = item.product;
+          const productFromList = this.products.find(p => String(p.id) === String(item.productId));
+          const product = productFromItem || productFromList || {};
+
+          const id = product.id ?? item.productId;
+          const name = product.name ?? undefined;
+          const description = product.description ?? undefined;
+          const price = product.price ?? 0;
+          const image = product.image ?? undefined;
+
+          return {
+            id,
+            name,
+            description,
+            price,
+            image,
+            quantity: parseInt(item.quantity) || 1,
+            addedAt: new Date().toISOString(),
+          };
+        });
+        
+        console.log("Transformed cart:", this.cart);
+        this.saveCart(); // Save to localStorage for consistency
         this.updateCartCount();
         this.loadCartItems();
       } catch (error) {
@@ -358,8 +386,14 @@ class ShopZoneApp {
   }
 
   async addToCart(productId) {
-    const product = this.products.find((p) => p.id === productId);
-    if (!product) return;
+    // Coerce id comparison to string to avoid number/string mismatch
+    const product = this.products.find((p) => String(p.id) === String(productId));
+    if (!product) {
+      console.error("Product not found:", productId);
+      return;
+    }
+    console.log("Adding product to cart:", product.name);
+    console.log("Product data:", product);
 
     let addedViaGraphQL = false;
 
@@ -373,8 +407,8 @@ class ShopZoneApp {
         addedViaGraphQL = true;
         return;
       } catch (error) {
-       //  console.error("Failed to add to cart via GraphQL:", error);
-       // this.showToast("Failed to add to cart, using local storage", "warning");
+        console.error("Failed to add to cart via GraphQL:", error);
+        this.showToast("Failed to add to cart, using local storage", "warning");
       }
     }
 
@@ -394,6 +428,7 @@ class ShopZoneApp {
 
       this.saveCart();
       this.updateCartCount();
+      console.log("Cart after adding item:", this.cart);
       this.showToast(`${product.name} added to cart!`, "success");
     }
   }
@@ -477,6 +512,9 @@ class ShopZoneApp {
     const checkoutBtn = document.getElementById("checkoutBtn");
 
     if (!container) return;
+    
+    console.log("Loading cart items, cart length:", this.cart.length);
+    console.log("Cart items data:", this.cart);
 
     if (this.cart.length === 0) {
       container.style.display = "none";
@@ -492,7 +530,15 @@ class ShopZoneApp {
 
     container.innerHTML = this.cart
       .map(
-        (item) => `
+        (item) => {
+          console.log("Rendering cart item:", item);
+          const name = item.name || 'Unknown Product';
+          const description = item.description || 'No description available';
+          const price = parseFloat(item.price) || 0;
+          const quantity = parseInt(item.quantity) || 1;
+          const id = item.id || 'unknown';
+          
+          return `
             <div class="cart-item">
                 <div class="row align-items-center">
                     <div class="col-md-2">
@@ -501,42 +547,33 @@ class ShopZoneApp {
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <h6 class="mb-1">${item.name}</h6>
-                        <p class="text-muted mb-0">${item.description}</p>
+                        <h6 class="mb-1">${name}</h6>
+                        <p class="text-muted mb-0">${description}</p>
                     </div>
                     <div class="col-md-2">
-                        <span class="fw-bold">${item.price}</span>
+                        <span class="fw-bold">₹${price.toFixed(2)}</span>
                     </div>
                     <div class="col-md-2">
                         <div class="quantity-controls">
-                            <button class="quantity-btn quantity-decrease" data-product-id="${
-                              item.id
-                            }">
+                            <button class="quantity-btn quantity-decrease" data-product-id="${id}">
                                 <i class="fas fa-minus"></i>
                             </button>
-                            <input type="number" class="quantity-input" value="${
-                              item.quantity
-                            }" readonly>
-                            <button class="quantity-btn quantity-increase" data-product-id="${
-                              item.id
-                            }">
+                            <input type="number" class="quantity-input" value="${quantity}" readonly>
+                            <button class="quantity-btn quantity-increase" data-product-id="${id}">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
                     </div>
                     <div class="col-md-2 text-end">
-                        <div class="fw-bold mb-2">${(
-                          item.price * item.quantity
-                        ).toFixed(2)}</div>
-                        <button class="btn btn-outline-danger btn-sm remove-item" data-product-id="${
-                          item.id
-                        }">
+                        <div class="fw-bold mb-2">₹${(price * quantity).toFixed(2)}</div>
+                        <button class="btn btn-outline-danger btn-sm remove-item" data-product-id="${id}">
                             <i class="fas fa-trash"></i> Remove
                         </button>
                     </div>
                 </div>
             </div>
-        `
+        `;
+        }
       )
       .join("");
 
@@ -550,18 +587,24 @@ class ShopZoneApp {
     const totalElement = document.getElementById("total");
 
     const subtotal = this.cart.reduce(
-      (sum, item) => sum + item.price * item.quantity,
+      (sum, item) => {
+        const price = parseFloat(item.price) || 0;
+        const quantity = parseInt(item.quantity) || 1;
+        return sum + (price * quantity);
+      },
       0
     );
     const tax = subtotal * 0.085; // 8.5% tax
-    const shipping = subtotal > 50 ? 0 : 5.99; // Free shipping over $50
+    const shipping = subtotal > 50 ? 0 : 5.99; // Free shipping over ₹50
     const total = subtotal + tax + shipping;
+
+    console.log("Order summary - subtotal:", subtotal, "tax:", tax, "shipping:", shipping, "total:", total);
 
     if (subtotalElement) subtotalElement.textContent = `${subtotal.toFixed(2)}`;
     if (taxElement) taxElement.textContent = `${tax.toFixed(2)}`;
     if (shippingElement) {
       shippingElement.textContent =
-        shipping === 0 ? "FREE" : `${shipping.toFixed(2)}`;
+        shipping === 0 ? "FREE" : `₹${shipping.toFixed(2)}`;
     }
     if (totalElement) totalElement.textContent = `${total.toFixed(2)}`;
   }
