@@ -501,6 +501,7 @@
                 case 'processing': return 'info';
                 case 'shipped': return 'primary';
                 case 'delivered': return 'success';
+                case 'customer_cancelled': return 'dark';
                 case 'cancelled': return 'danger';
                 default: return 'secondary';
             }
@@ -601,6 +602,7 @@
                 case 'processing': return 'Order is being processed';
                 case 'shipped': return 'Order has been shipped';
                 case 'delivered': return 'Order delivered successfully';
+                case 'customer_cancelled': return 'Order was cancelled by customer';
                 case 'cancelled': return 'Order was cancelled';
                 default: return 'Status unknown';
             }
@@ -610,7 +612,7 @@
             if (!confirm('Are you sure you want to cancel this order?')) return;
             
             try {
-                const response = await fetch('/graphql', {
+                const response = await fetch('http://localhost:4001/graphql', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -625,7 +627,7 @@
                                 }
                             }
                         `,
-                        variables: { id: orderId, status: 'cancelled' }
+                        variables: { id: orderId, status: 'customer_cancelled' }
                     })
                 });
                 

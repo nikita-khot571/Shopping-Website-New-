@@ -690,7 +690,16 @@ export const resolvers = {
           throw new Error("Not authorized");
         }
 
-        order.status = status;
+        // Restrict customer to cancel only. Admin can set any status.
+        if (user.role !== "admin") {
+          const normalized = String(status).toLowerCase();
+          if (normalized !== "cancelled" && normalized !== "customer_cancelled") {
+            throw new Error("Customers can only cancel their orders");
+          }
+          order.status = "customer_cancelled"; // use explicit customer status
+        } else {
+          order.status = status;
+        }
         await order.save();
 
         return Order.findByPk(order.id, {
