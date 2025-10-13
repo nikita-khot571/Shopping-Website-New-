@@ -86,11 +86,9 @@ async function startServer() {
     });
 
     try {
-        console.log('🔄 Initializing database...');
         await setupDatabase();
         console.log('✅ Database initialized successfully');
         
-        console.log('🔄 Setting up GraphQL server...');
         const server = new ApolloServer({
             typeDefs,
             resolvers,
@@ -152,16 +150,12 @@ async function startServer() {
         
         app.listen(PORT, () => {
             console.log('\n🎉 ShopZone Server is running!');
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.log(`🌐 Server:           http://localhost:${PORT}`);
-            console.log(`🎮 GraphQL:          http://localhost:${PORT}/graphql`);
-            console.log(`📱 Frontend:         http://localhost:3000`);
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.log('📋 Demo Accounts:');
-            console.log('   👑 Admin:    admin@shopzone.com / admin123');
-            console.log('   👤 Customer: customer@shopzone.com / customer123');
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-        });
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log(`🌐 Server:         http://localhost:${PORT}`);
+            console.log(`🎮 GraphQL:        http://localhost:${PORT}/graphql`);
+            console.log(`📱 Frontend:       http://localhost:3000`);
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            });
         
     } catch (error) {
         console.error('❌ Server startup failed:', error);

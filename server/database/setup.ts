@@ -31,15 +31,15 @@ CartItem.belongsTo(User, { foreignKey: 'userId' });
 Order.hasMany(OrderItem, { foreignKey: 'orderId' });
 OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
 
-// Addresses associations
 User.hasMany(Address, { foreignKey: 'userId' });
 Address.belongsTo(User, { foreignKey: 'userId' });
+
 
 export async function setupDatabase() {
   try {
     await sequelize.authenticate();
     console.log("Connection to MySQL has been established successfully.");
-
+// --------------------------------------------------------------------------------------------------------------------------------------------------
     // Check if tables exist and have data
     const userCount = await User.count();
     const productCount = await Product.count();
@@ -137,7 +137,7 @@ export async function setupDatabase() {
 
       for (const product of products) {
         await Product.create({
-          ...product,
+          ...product, // (...): Merge existing options
           createdAt: new Date(),
           updatedAt: new Date(),
         });
@@ -145,12 +145,11 @@ export async function setupDatabase() {
 
       console.log("Demo data insertion completed.");
     } else {
-      console.log(`Database already has ${userCount} users and ${productCount} products. Skipping demo data insertion.`);
-      // Just sync without force to ensure schema is up to date
+      // console.log(`Database already has ${userCount} users and ${productCount} products. Skipping demo data insertion.`);
       await sequelize.sync();
     }
 
-    console.log("Database setup completed.");
+   // console.log("Database setup completed.");
   } catch (error) {
     console.error("Unable to connect to the database or setup data:", error);
   }

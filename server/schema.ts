@@ -307,12 +307,12 @@ export const resolvers = {
       }
 
       try {
-        console.log("Fetching all orders for admin:", user.email);
+       //  console.log("Fetching all orders for admin:", user.email);
         const orders = await Order.findAll({
           order: [["createdAt", "DESC"]],
         });
 
-        console.log(`Found ${orders.length} orders`);
+      //   console.log(`Found ${orders.length} orders`);
         return orders;
       } catch (error) {
         console.error("Error fetching all orders:", error);
@@ -823,9 +823,19 @@ export const resolvers = {
 
       try {
         const product = await Product.findByPk(id);
-        if (!product) throw new Error("Product not found");
+        if (!product) {
+          throw new Error("Product not found");
+        }
 
+        // 1. Delete all associated cart items
+        await Cart.destroy({ where: { productId: id } });
+
+        // 2. Delete all associated order items
+        await OrderItem.destroy({ where: { productId: id } });
+
+        // 3. Delete the product itself
         await Product.destroy({ where: { id } });
+
         console.log("✅ Admin deleted product:", product.name);
         return true;
       } catch (error: any) {
@@ -907,7 +917,7 @@ export const resolvers = {
           include: [{ model: Product }],
         });
         
-        console.log(`Found ${orderItems.length} items for order ${order.id}`);
+        // console.log(`Found ${orderItems.length} items for order ${order.id}`);
         return orderItems;
       } catch (error) {
         console.error("Error fetching order items:", error);
@@ -922,7 +932,7 @@ export const resolvers = {
         }
         
         const user = await User.findByPk(order.userId);
-        console.log(`Found user for order ${order.id}:`, user ? user.email : 'null');
+       //  console.log(`Found user for order ${order.id}:`, user ? user.email : 'null');
         return user;
       } catch (error) {
         console.error("Error fetching order user:", error);

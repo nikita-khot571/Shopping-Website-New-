@@ -804,7 +804,7 @@ exports.resolvers = {
                     return null;
                 }
                 const user = await models_1.User.findByPk(order.userId);
-                console.log(`Found user for order ${order.id}:`, user ? user.email : 'null');
+             //   console.log(`Found user for order ${order.id}:`, user ? user.email : 'null');
                 return user;
             }
             catch (error) {

@@ -37,7 +37,7 @@ export class ProductModel {
     order?: any[];
     include?: any[];
   }) {
-    // Handle search functionality
+    // Handle search functionality on Home page
     if (options?.where?.name) {
       options.where = {
         ...options.where,
@@ -128,5 +128,4 @@ export class OrderItemModel {
   }
 }
 
-// Export the models
 export { UserModel as User, ProductModel as Product, CartModel as Cart, OrderModel as Order, OrderItemModel as OrderItem };

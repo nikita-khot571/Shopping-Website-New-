@@ -7,9 +7,30 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="style.css" rel="stylesheet">
+    <style>
+        .cart-item {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+        }
+        .cart-item img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-right: 20px;
+        }
+        .cart-item-details {
+            flex: 1;
+        }
+        .cart-item h5 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+    </style>
 </head>
 <body>
-    <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
             <a class="navbar-brand" href="index.html">
@@ -64,7 +85,7 @@
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span>Shipping:</span>
-                            <span id="shipping">₹0.00</span>
+                            <span id="shipping">FREE</span>
                         </div>
                         <hr>
                         <div class="d-flex justify-content-between mb-3">
@@ -82,80 +103,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="app.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Wait for shopZone to be initialized
-            const checkShopZone = () => {
-                if (window.shopZone) {
-                    window.shopZone.loadCartItems();
-                    window.shopZone.updateCartCount();
-                } else {
-                    // Retry after a short delay if shopZone is not ready
-                    setTimeout(checkShopZone, 100);
-                }
-            };
-            checkShopZone();
-            
-            // Update auth links (use centralized implementation in app.js)
-            if (typeof updateAuthLinks === 'function') {
-                updateAuthLinks();
-            }
-            
-            // Setup checkout button
-            setupCheckoutButton();
-        });
-
-        function setupCheckoutButton() {
-            const checkoutBtn = document.getElementById('checkoutBtn');
-            if (checkoutBtn) {
-                checkoutBtn.addEventListener('click', function() {
-                    proceedToCheckout();
-                });
-            }
-        }
-
-        function proceedToCheckout() {
-            if (!window.shopZone || window.shopZone.cart.length === 0) {
-                alert('Your cart is empty!');
-                return;
-            }
-
-            // Calculate totals
-            const subtotal = window.shopZone.cart.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
-            const tax = subtotal * 0.085; // 8.5% tax
-            const shipping = subtotal > 50 ? 0 : 5.99; // Free shipping over ₹50
-            const total = subtotal + tax + shipping;
-
-            // Save checkout data
-            const checkoutData = {
-                items: window.shopZone.cart,
-                subtotal: subtotal,
-                tax: tax,
-                shipping: shipping,
-                total: total,
-                timestamp: new Date().toISOString()
-            };
-
-            localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
-            
-            // Redirect to checkout page
-            window.location.href = 'checkout.html';
-        }
-
-        function updateAuthLinks() {
-            const authLink = document.getElementById('authLink');
-            const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-            
-            if (authLink) {
-                if (currentUser) {
-                    authLink.innerHTML = '<i class="fas fa-user me-1"></i>Account';
-                    authLink.href = 'admin.html';
-                } else {
-                    authLink.innerHTML = '<i class="fas fa-user me-1"></i>Login';
-                    authLink.href = 'login.html';
-                }
-            }
-        }
-    </script>
+    <script src="graphql.js"></script>
 </body>
 </html>

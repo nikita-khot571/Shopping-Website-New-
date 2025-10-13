@@ -444,6 +444,7 @@ class ShopZoneApp {
         }
         await window.graphqlService.updateCartItem(productId, newQuantity);
         await this.loadCartFromBackend();
+        this.loadCartItems();
         return;
       } catch (error) {
         console.error("Failed to update cart quantity via GraphQL:", error);
@@ -473,6 +474,7 @@ class ShopZoneApp {
       try {
         await window.graphqlService.removeFromCart(productId);
         await this.loadCartFromBackend();
+        this.loadCartItems();
         return;
       } catch (error) {
         console.error("Failed to remove from cart via GraphQL:", error);
@@ -506,7 +508,7 @@ class ShopZoneApp {
     });
   }
 
-  loadCartItems() {
+   loadCartItems() {
     const container = document.getElementById("cartItemsContainer");
     const emptyMessage = document.getElementById("emptyCartMessage");
     const checkoutBtn = document.getElementById("checkoutBtn");
@@ -517,6 +519,7 @@ class ShopZoneApp {
     console.log("Cart items data:", this.cart);
 
     if (this.cart.length === 0) {
+      container.innerHTML = '';
       container.style.display = "none";
       if (emptyMessage) emptyMessage.style.display = "block";
       if (checkoutBtn) checkoutBtn.disabled = true;
@@ -537,13 +540,14 @@ class ShopZoneApp {
           const price = parseFloat(item.price) || 0;
           const quantity = parseInt(item.quantity) || 1;
           const id = item.id || 'unknown';
-          
+          const image = item.image; // Get the image URL from the item
+
           return `
             <div class="cart-item">
                 <div class="row align-items-center">
                     <div class="col-md-2">
                         <div class="cart-item-image">
-                            <i class="fas fa-image"></i>
+                            <img src="${image}" alt="${name}" onerror="this.onerror=null;this.src='https://via.placeholder.com/80?text=No+Image';">
                         </div>
                     </div>
                     <div class="col-md-4">
