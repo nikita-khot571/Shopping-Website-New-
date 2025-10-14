@@ -24,6 +24,7 @@ export const typeDefs = gql`
     price: Float!
     category: String!
     image: String
+    images: [String]
     stock: Int!
     createdAt: String!
     updatedAt: String!
@@ -140,6 +141,7 @@ export const typeDefs = gql`
       price: Float!
       category: String!
       image: String
+      images: [String]
       stock: Int!
     ): Product!
     updateProduct(
@@ -149,6 +151,7 @@ export const typeDefs = gql`
       price: Float
       category: String
       image: String
+      images: [String]
       stock: Int
     ): Product!
     deleteProduct(id: ID!): Boolean!
@@ -755,7 +758,7 @@ export const resolvers = {
 
     createProduct: async (
       _: any,
-      { name, description, price, category, image, stock }: any,
+      { name, description, price, category, image, images, stock }: any,
       { req }: any
     ) => {
       const user = await getUser(req);
@@ -772,6 +775,7 @@ export const resolvers = {
           price,
           category,
           image: image || null,
+          images: Array.isArray(images) ? images.slice(0, 3) : null,
           stock,
           createdAt: now,
           updatedAt: now,
@@ -787,7 +791,7 @@ export const resolvers = {
 
     updateProduct: async (
       _: any,
-      { id, name, description, price, category, image, stock }: any,
+      { id, name, description, price, category, image, images, stock }: any,
       { req }: any
     ) => {
       const user = await getUser(req);
@@ -805,6 +809,7 @@ export const resolvers = {
         if (price !== undefined) product.price = price;
         if (category) product.category = category;
         if (image !== undefined) product.image = image || null;
+        if (images !== undefined) product.images = Array.isArray(images) ? images.slice(0, 3) : null;
         if (stock !== undefined) product.stock = stock;
 
         await product.save();

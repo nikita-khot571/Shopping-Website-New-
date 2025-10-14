@@ -84,12 +84,13 @@ interface ProductAttributes {
   price: number;
   category: string;
   image?: string;
+  images?: any; // JSON array of additional image URLs
   stock: number;
   createdAt: Date;
   updatedAt: Date;
 }
 
-interface ProductCreationAttributes extends Optional<ProductAttributes, "id" | "description" | "image" | "createdAt" | "updatedAt"> {}
+interface ProductCreationAttributes extends Optional<ProductAttributes, "id" | "description" | "image" | "images" | "createdAt" | "updatedAt"> {}
 
 export class Product extends Model<ProductAttributes, ProductCreationAttributes> implements ProductAttributes {
   public id!: string;
@@ -98,6 +99,7 @@ export class Product extends Model<ProductAttributes, ProductCreationAttributes>
   public price!: number;
   public category!: string;
   public image?: string;
+  public images?: any;
   public stock!: number;
   public createdAt!: Date;
   public updatedAt!: Date;
@@ -129,6 +131,11 @@ export function initProductModel(sequelize: Sequelize) {
       },
       image: {
         type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      images: {
+        // store as JSON in MySQL (uses LONGTEXT with check) – Sequelize will stringify/parse
+        type: DataTypes.JSON,
         allowNull: true,
       },
       stock: {

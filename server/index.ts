@@ -132,6 +132,10 @@ async function startServer() {
             res.sendFile(path.join(__dirname, '../public/cart.html'));
         });
         
+        app.get('/product', (_req: Request, res: Response) => {
+            res.sendFile(path.join(__dirname, '../public/product.html'));
+        });
+        
         app.get('/admin', (_req: Request, res: Response) => {
             res.sendFile(path.join(__dirname, '../public/admin.html'));
         });

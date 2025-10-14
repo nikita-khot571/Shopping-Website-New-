@@ -72,17 +72,8 @@ const GraphQLQueries = {
                 price
                 category
                 image
+                images
                 stock
-                reviews {
-                    id
-                    rating
-                    comment
-                    user {
-                        id
-                        name
-                    }
-                    createdAt
-                }
                 createdAt
                 updatedAt
             }

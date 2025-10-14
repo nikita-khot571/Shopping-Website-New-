@@ -40,20 +40,22 @@ export async function setupDatabase() {
     await sequelize.authenticate();
     console.log("Connection to MySQL has been established successfully.");
 // --------------------------------------------------------------------------------------------------------------------------------------------------
-    // Check if tables exist and have data
+    // Make sure schema is up-to-date (adds new columns like Product.images without dropping data)
+    await sequelize.sync({ alter: true });
+
+    // Check if tables have data
     const userCount = await User.count();
     const productCount = await Product.count();
 
-    if (userCount === 0 && productCount === 0) {
-      console.log("Database is empty, inserting demo data...");
-
-      await sequelize.sync({ force: true }); // Only force sync if database is empty
+    if (productCount === 0) {
+      console.log("No products found, inserting demo data...");
 
       // Insert demo users with hashed passwords
       const hashedAdminPassword = await bcrypt.hash("admin123", 12);
       const hashedCustomerPassword = await bcrypt.hash("customer123", 12);
 
-      await User.create({
+      if (userCount === 0) {
+        await User.create({
         id: uuidv4(),
         email: "admin@shopzone.com",
         password: hashedAdminPassword,
@@ -63,9 +65,9 @@ export async function setupDatabase() {
         role: "admin",
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+        });
 
-      await User.create({
+        await User.create({
         id: uuidv4(),
         email: "customer@shopzone.com",
         password: hashedCustomerPassword,
@@ -75,7 +77,8 @@ export async function setupDatabase() {
         role: "customer",
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+        });
+      }
 
       // Insert sample products
       const products = [
@@ -146,7 +149,6 @@ export async function setupDatabase() {
       console.log("Demo data insertion completed.");
     } else {
       // console.log(`Database already has ${userCount} users and ${productCount} products. Skipping demo data insertion.`);
-      await sequelize.sync();
     }
 
    // console.log("Database setup completed.");

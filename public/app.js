@@ -27,6 +27,8 @@ class ShopZoneApp {
 
       this.updateCartCount();
       this.setupEventListeners();
+      // If we're on cart page, render items immediately
+      this.loadCartItems();
     } catch (error) {
       console.error("Failed to initialize app:", error);
       this.showToast("Backend not available, using demo mode", "warning");
@@ -278,7 +280,7 @@ class ShopZoneApp {
       .map(
         (product) => `
             <div class="col-md-6 col-lg-4 col-xl-3">
-                <div class="card product-card h-100">
+                <div class="card product-card h-100" data-product-id="${product.id}" onclick="openProductDetail('${product.id}')" style="cursor:pointer;">
                     <div class="product-image">
                         <img src="${product.image}" alt="${product.name}" class="img-fluid" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=No+Image';" />
                     </div>
@@ -290,7 +292,7 @@ class ShopZoneApp {
                             <span class="product-price">${product.price}</span>
                             <small class="text-muted">${product.stock} in stock</small>
                         </div>
-                        <button class="btn btn-add-cart" data-product-id="${product.id}">
+                        <button class="btn btn-add-cart" data-product-id="${product.id}" onclick="event.stopPropagation(); addToCartFromCard('${product.id}')">
                             <i class="fas fa-cart-plus me-2"></i>Add to Cart
                         </button>
                     </div>
@@ -551,28 +553,26 @@ class ShopZoneApp {
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <h6 class="mb-1">${name}</h6>
-                        <p class="text-muted mb-0">${description}</p>
+                        <h6 class="mb-0 text-truncate" title="${name}">${name}</h6>
                     </div>
-                    <div class="col-md-2">
-                        <span class="fw-bold">₹${price.toFixed(2)}</span>
+                    <div class="col-md-2 text-md-center mt-2 mt-md-0">
+                        <span class="fw-bold price-value">₹${price.toFixed(2)}</span>
                     </div>
-                    <div class="col-md-2">
-                        <div class="quantity-controls">
-                            <button class="quantity-btn quantity-decrease" data-product-id="${id}">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                            <input type="number" class="quantity-input" value="${quantity}" readonly>
-                            <button class="quantity-btn quantity-increase" data-product-id="${id}">
-                                <i class="fas fa-plus"></i>
+                    <div class="col-md-3 mt-2 mt-md-0">
+                        <div class="cart-actions">
+                            <div class="quantity-controls">
+                                <button class="quantity-btn quantity-decrease" data-product-id="${id}">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="number" class="quantity-input" value="${quantity}" readonly>
+                                <button class="quantity-btn quantity-increase" data-product-id="${id}">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <button class="btn btn-outline-danger btn-sm remove-item" data-product-id="${id}">
+                                <i class="fas fa-trash"></i> Remove
                             </button>
                         </div>
-                    </div>
-                    <div class="col-md-2 text-end">
-                        <div class="fw-bold mb-2">₹${(price * quantity).toFixed(2)}</div>
-                        <button class="btn btn-outline-danger btn-sm remove-item" data-product-id="${id}">
-                            <i class="fas fa-trash"></i> Remove
-                        </button>
                     </div>
                 </div>
             </div>
@@ -640,6 +640,17 @@ class ShopZoneApp {
     toast.addEventListener("hidden.bs.toast", () => {
       toast.remove();
     });
+  }
+}// end of class
+
+// Navigation helpers
+function openProductDetail(productId) {
+  window.location.href = `product.html?id=${encodeURIComponent(productId)}`;
+}
+
+async function addToCartFromCard(productId) {
+  if (window.shopZone && typeof window.shopZone.addToCart === 'function') {
+    await window.shopZone.addToCart(productId, 1);
   }
 }
 
