@@ -78,10 +78,8 @@ async function startServer() {
         }
     });
     try {
-        console.log('🔄 Initializing database...');
         await (0, setup_1.setupDatabase)();
         console.log('✅ Database initialized successfully');
-        console.log('🔄 Setting up GraphQL server...');
         const server = new apollo_server_express_1.ApolloServer({
             typeDefs: schema_1.typeDefs,
             resolvers: schema_1.resolvers,
@@ -117,6 +115,9 @@ async function startServer() {
         app.get('/cart', (_req, res) => {
             res.sendFile(path_1.default.join(__dirname, '../public/cart.html'));
         });
+        app.get('/product', (_req, res) => {
+            res.sendFile(path_1.default.join(__dirname, '../public/product.html'));
+        });
         app.get('/admin', (_req, res) => {
             res.sendFile(path_1.default.join(__dirname, '../public/admin.html'));
         });
@@ -132,15 +133,11 @@ async function startServer() {
         });
         app.listen(PORT, () => {
             console.log('\n🎉 ShopZone Server is running!');
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.log(`🌐 Server:           http://localhost:${PORT}`);
-            console.log(`🎮 GraphQL:          http://localhost:${PORT}/graphql`);
-            console.log(`📱 Frontend:         http://localhost:3000`);
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.log('📋 Demo Accounts:');
-            console.log('   👑 Admin:    admin@shopzone.com / admin123');
-            console.log('   👤 Customer: customer@shopzone.com / customer123');
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log(`🌐 Server:         http://localhost:${PORT}`);
+            console.log(`🎮 GraphQL:        http://localhost:${PORT}/graphql`);
+            console.log(`📱 Frontend:       http://localhost:3000`);
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         });
     }
     catch (error) {

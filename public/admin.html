@@ -102,7 +102,7 @@
                         <div class="col-md-3 mb-3">
                             <div class="card stat-card">
                                 <div class="card-body text-center">
-                                    <i class="fas fa-dollar-sign fa-2x mb-2"></i>
+                                    <i class="fa-solid fa-indian-rupee-sign fa-2x mb-2"></i>
                                     <h4 id="totalRevenue">₹0</h4>
                                     <p class="mb-0">Total Revenue</p>
                                     <small class="opacity-75" id="revenueChange">+0% from last month</small>
@@ -111,40 +111,7 @@
                         </div>
                     </div>
 
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="card admin-card">
-                                <div class="card-header">
-                                    <h5><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-3 mb-2">
-                                            <button class="btn btn-primary w-100" onclick="showAddProductModal()">
-                                                <i class="fas fa-plus me-2"></i>Add Product
-                                            </button>
-                                        </div>
-                                        <div class="col-md-3 mb-2">
-                                            <button class="btn btn-info w-100" onclick="showSection('orders', event)">
-                                                <i class="fas fa-eye me-2"></i>View Orders
-                                            </button>
-                                        </div>
-                                        <div class="col-md-3 mb-2">
-                                            <button class="btn btn-success w-100" onclick="showSection('users', event)">
-                                                <i class="fas fa-users me-2"></i>Manage Users
-                                            </button>
-                                        </div>
-                                        <div class="col-md-3 mb-2">
-                                            <button class="btn btn-warning w-100" onclick="exportData()">
-                                                <i class="fas fa-download me-2"></i>Export Data
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
+                    
                     <div class="row">
                         <div class="col-lg-8 mb-4">
                             <div class="card admin-card">
@@ -286,15 +253,12 @@
                                             <th>User</th>
                                             <th>Email</th>
                                             <th>Role</th>
-                                            <th>Joined</th>
-                                            <th>Orders</th>
-                                            <th>Total Spent</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="usersTableBody">
                                         <tr>
-                                            <td colspan="7" class="text-center">
+                                            <td colspan="4" class="text-center">
                                                 <div class="loading-spinner">
                                                     <div class="spinner-border text-primary" role="status">
                                                         <span class="visually-hidden">Loading...</span>
@@ -649,7 +613,7 @@
                                 <i class="fas fa-user me-1"></i>${order.user ? `${order.user.firstName} ${order.user.lastName}` : 'Unknown User'}
                             </small>
                             <small class="text-muted ms-2">
-                                <i class="fas fa-clock me-1"></i>${new Date(order.createdAt).toLocaleDateString()}
+                                <i class="fas fa-clock me-1"></i>${formatDate(order.createdAt)}
                             </small>
                         </div>
                         <div class="text-end">
@@ -923,7 +887,7 @@
                     <td>${order.items.length}</td>
                     <td><strong class="text-primary">₹${parseFloat(order.total).toFixed(2)}</strong></td>
                     <td><span class="badge bg-${getStatusColor(order.status)} status-badge">${order.status}</span></td>
-                    <td><small>${new Date(order.createdAt).toLocaleDateString()}</small></td>
+                    <td><small>${formatDate(order.createdAt)}</small></td>
                     <td class="table-actions">
                         <button class="btn btn-sm btn-outline-info me-1" onclick="viewOrder('${order.id}')" title="View Details">
                             <i class="fas fa-eye"></i>
@@ -947,7 +911,7 @@
             if (users.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="text-center">
+                        <td colspan="4" class="text-center">
                             <div class="empty-state">
                                 <i class="fas fa-users fa-3x mb-3"></i>
                                 <h5>No users found</h5>
@@ -960,9 +924,6 @@
             }
             
             tbody.innerHTML = users.map(user => {
-                const userOrders = orders.filter(order => order.user.id === user.id);
-                const totalSpent = userOrders.reduce((sum, order) => sum + parseFloat(order.total), 0);
-                
                 return `
                     <tr>
                         <td>
@@ -977,9 +938,6 @@
                         </td>
                         <td>${user.email}</td>
                         <td><span class="badge ${user.role === 'admin' ? 'bg-danger' : 'bg-primary'}">${user.role}</span></td>
-                        <td><small>${new Date(user.createdAt).toLocaleDateString()}</small></td>
-                        <td><strong>${userOrders.length}</strong></td>
-                        <td><strong class="text-success">₹${totalSpent.toFixed(2)}</strong></td>
                         <td class="table-actions">
                             <button class="btn btn-sm btn-outline-info" onclick="viewUserDetails('${user.id}')" title="View Details">
                                 <i class="fas fa-eye"></i>
@@ -1223,7 +1181,7 @@
                             </tr>
                             <tr>
                                 <td><strong>Date:</strong></td>
-                                <td>${new Date(order.createdAt).toLocaleString()}</td>
+                                <td>${formatDateTime(order.createdAt)}</td>
                             </tr>
                             <tr>
                                 <td><strong>Status:</strong></td>
@@ -1313,10 +1271,7 @@
                                 <td><strong>Role:</strong></td>
                                 <td><span class="badge ${user.role === 'admin' ? 'bg-danger' : 'bg-primary'}">${user.role}</span></td>
                             </tr>
-                            <tr>
-                                <td><strong>Joined:</strong></td>
-                                <td>${new Date(user.createdAt).toLocaleDateString()}</td>
-                            </tr>
+                       
                         </table>
                     </div>
                     <div class="col-md-6">
@@ -1355,7 +1310,7 @@
                                 ${userOrders.map(order => `
                                     <tr>
                                         <td>#${order.id.slice(-8)}</td>
-                                        <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+                                        <td>${formatDate(order.createdAt)}</td>
                                         <td>${order.items.length}</td>
                                         <td>₹${parseFloat(order.total).toFixed(2)}</td>
                                         <td><span class="badge bg-${getStatusColor(order.status)}">${order.status}</span></td>
@@ -1380,6 +1335,20 @@
                 case 'cancelled': return 'danger';
                 default: return 'secondary';
             }
+        }
+
+        // Date formatting helpers to avoid Invalid Date
+        function isValidDate(value) {
+            const d = new Date(value);
+            return !!value && !isNaN(d.getTime());
+        }
+
+        function formatDate(value) {
+            return isValidDate(value) ? new Date(value).toLocaleDateString() : '—';
+        }
+
+        function formatDateTime(value) {
+            return isValidDate(value) ? new Date(value).toLocaleString() : '—';
         }
 
         function filterProducts() {
@@ -1621,7 +1590,7 @@
                 total: order.total,
                 status: order.status,
                 items: order.items.length,
-                date: new Date(order.createdAt).toLocaleDateString()
+                date: formatDate(order.createdAt)
             }));
             const csv = convertToCSV(ordersData, ['id', 'customer', 'email', 'total', 'status', 'items', 'date']);
             downloadCSV(csv, 'orders.csv');
@@ -1633,10 +1602,9 @@
                 id: user.id,
                 name: `${user.firstName} ${user.lastName}`,
                 email: user.email,
-                role: user.role,
-                joined: new Date(user.createdAt).toLocaleDateString()
+                role: user.role
             }));
-            const csv = convertToCSV(usersData, ['id', 'name', 'email', 'role', 'joined']);
+            const csv = convertToCSV(usersData, ['id', 'name', 'email', 'role']);
             downloadCSV(csv, 'users.csv');
             showToast('Users exported successfully!', 'success');
         }

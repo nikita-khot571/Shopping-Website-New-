@@ -29,6 +29,7 @@ exports.typeDefs = (0, apollo_server_express_1.gql) `
     price: Float!
     category: String!
     image: String
+    images: [String]
     stock: Int!
     createdAt: String!
     updatedAt: String!
@@ -145,6 +146,7 @@ exports.typeDefs = (0, apollo_server_express_1.gql) `
       price: Float!
       category: String!
       image: String
+      images: [String]
       stock: Int!
     ): Product!
     updateProduct(
@@ -154,6 +156,7 @@ exports.typeDefs = (0, apollo_server_express_1.gql) `
       price: Float
       category: String
       image: String
+      images: [String]
       stock: Int
     ): Product!
     deleteProduct(id: ID!): Boolean!
@@ -295,11 +298,11 @@ exports.resolvers = {
                 throw new Error("Admin access required");
             }
             try {
-                console.log("Fetching all orders for admin:", user.email);
+                //  console.log("Fetching all orders for admin:", user.email);
                 const orders = await models_1.Order.findAll({
                     order: [["createdAt", "DESC"]],
                 });
-                console.log(`Found ${orders.length} orders`);
+                //   console.log(`Found ${orders.length} orders`);
                 return orders;
             }
             catch (error) {
@@ -353,13 +356,17 @@ exports.resolvers = {
                     throw new Error("User with this email already exists");
                 }
                 const hashedPassword = await bcryptjs_1.default.hash(password, 12);
+                const now = new Date();
                 const user = await models_1.User.create({
+                    id: (0, uuid_1.v4)(),
                     email: email.toLowerCase().trim(),
                     password: hashedPassword,
                     firstName: firstName.trim(),
                     lastName: lastName.trim(),
                     phone: phone ? phone.trim() : null,
                     role: "customer",
+                    createdAt: now,
+                    updatedAt: now,
                 });
                 const token = jsonwebtoken_1.default.sign({ userId: user.id }, process.env.JWT_SECRET || "your-secret-key-123456789", { expiresIn: "7d" });
                 console.log("✅ New user registered:", user.email);
@@ -498,7 +505,7 @@ exports.resolvers = {
             if (!user)
                 throw new Error("Not authenticated");
             try {
-                // Get cart items with product association
+                // Get fresh cart items with product association (only those still present)
                 const cartItems = await models_1.CartItem.findAll({
                     where: { userId: user.id },
                     include: [
@@ -509,10 +516,23 @@ exports.resolvers = {
                     ],
                 });
                 // Filter valid cart items (with existing products)
+                // Also coalesce duplicate productIds by summing quantities, in case of rapid client updates
                 const validCartItems = cartItems.filter(item => {
                     const product = item.Product || item.product;
                     return product !== null && product !== undefined;
                 });
+                // Collapse duplicates (defensive)
+                const byProduct = {};
+                for (const item of validCartItems) {
+                    const key = String(item.productId);
+                    if (!byProduct[key]) {
+                        byProduct[key] = item;
+                    }
+                    else {
+                        byProduct[key].quantity += item.quantity;
+                    }
+                }
+                const itemsNormalized = Object.values(byProduct);
                 if (validCartItems.length === 0) {
                     // Clean up any orphaned cart items
                     await models_1.CartItem.destroy({ where: { userId: user.id } });
@@ -521,7 +541,7 @@ exports.resolvers = {
                 // Calculate total
                 let subtotal = 0;
                 const itemsToProcess = [];
-                for (const item of validCartItems) {
+                for (const item of itemsNormalized) {
                     const product = await models_1.Product.findByPk(item.productId);
                     if (!product) {
                         console.log(`⚠️ Product ${item.productId} not found, skipping`);
@@ -575,7 +595,7 @@ exports.resolvers = {
                     await product.save();
                     console.log(`   ✓ ${product.name} - Qty: ${cartItem.quantity}, Stock remaining: ${product.stock}`);
                 }
-                // Clear entire cart (including any orphaned items)
+                // Clear entire cart once order is created
                 await models_1.CartItem.destroy({ where: { userId: user.id } });
                 console.log(`🧹 Cart cleared for user ${user.email}`);
                 // Return order with all associations
@@ -607,7 +627,17 @@ exports.resolvers = {
                 if (order.userId !== user.id && user.role !== "admin") {
                     throw new Error("Not authorized");
                 }
-                order.status = status;
+                // Restrict customer to cancel only. Admin can set any status.
+                if (user.role !== "admin") {
+                    const normalized = String(status).toLowerCase();
+                    if (normalized !== "cancelled" && normalized !== "customer_cancelled") {
+                        throw new Error("Customers can only cancel their orders");
+                    }
+                    order.status = "customer_cancelled"; // use explicit customer status
+                }
+                else {
+                    order.status = status;
+                }
                 await order.save();
                 return models_1.Order.findByPk(order.id, {
                     include: [
@@ -652,7 +682,7 @@ exports.resolvers = {
                 throw new Error(error.message || "Failed to update profile");
             }
         },
-        createProduct: async (_, { name, description, price, category, image, stock }, { req }) => {
+        createProduct: async (_, { name, description, price, category, image, images, stock }, { req }) => {
             const user = await getUser(req);
             if (!user || user.role !== "admin") {
                 throw new Error("Admin access required");
@@ -666,6 +696,7 @@ exports.resolvers = {
                     price,
                     category,
                     image: image || null,
+                    images: Array.isArray(images) ? images.slice(0, 3) : null,
                     stock,
                     createdAt: now,
                     updatedAt: now,
@@ -678,7 +709,7 @@ exports.resolvers = {
                 throw new Error(error.message || "Failed to create product");
             }
         },
-        updateProduct: async (_, { id, name, description, price, category, image, stock }, { req }) => {
+        updateProduct: async (_, { id, name, description, price, category, image, images, stock }, { req }) => {
             const user = await getUser(req);
             if (!user || user.role !== "admin") {
                 throw new Error("Admin access required");
@@ -697,6 +728,8 @@ exports.resolvers = {
                     product.category = category;
                 if (image !== undefined)
                     product.image = image || null;
+                if (images !== undefined)
+                    product.images = Array.isArray(images) ? images.slice(0, 3) : null;
                 if (stock !== undefined)
                     product.stock = stock;
                 await product.save();
@@ -714,8 +747,14 @@ exports.resolvers = {
             }
             try {
                 const product = await models_1.Product.findByPk(id);
-                if (!product)
+                if (!product) {
                     throw new Error("Product not found");
+                }
+                // 1. Delete all associated cart items
+                await models_1.CartItem.destroy({ where: { productId: id } });
+                // 2. Delete all associated order items
+                await models_1.OrderItem.destroy({ where: { productId: id } });
+                // 3. Delete the product itself
                 await models_1.Product.destroy({ where: { id } });
                 console.log("✅ Admin deleted product:", product.name);
                 return true;
@@ -730,6 +769,10 @@ exports.resolvers = {
             if (!user)
                 throw new Error("Not authenticated");
             const now = new Date();
+            // If setting default, unset all other defaults for this user
+            if (input.isDefault) {
+                await models_1.Address.update({ isDefault: false }, { where: { userId: user.id } });
+            }
             const created = await models_1.Address.create({
                 id: (0, uuid_1.v4)(),
                 userId: user.id,
@@ -754,6 +797,10 @@ exports.resolvers = {
             const address = await models_1.Address.findByPk(id);
             if (!address || address.userId !== user.id)
                 throw new Error("Address not found");
+            // If toggling default on, unset others first
+            if (input.isDefault === true) {
+                await models_1.Address.update({ isDefault: false }, { where: { userId: user.id } });
+            }
             Object.assign(address, {
                 label: input.label,
                 firstName: input.firstName,
@@ -789,7 +836,7 @@ exports.resolvers = {
                     where: { orderId: order.id },
                     include: [{ model: models_1.Product }],
                 });
-                console.log(`Found ${orderItems.length} items for order ${order.id}`);
+                // console.log(`Found ${orderItems.length} items for order ${order.id}`);
                 return orderItems;
             }
             catch (error) {
@@ -804,7 +851,7 @@ exports.resolvers = {
                     return null;
                 }
                 const user = await models_1.User.findByPk(order.userId);
-             //   console.log(`Found user for order ${order.id}:`, user ? user.email : 'null');
+                //  console.log(`Found user for order ${order.id}:`, user ? user.email : 'null');
                 return user;
             }
             catch (error) {

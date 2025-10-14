@@ -30,44 +30,47 @@ models_1.User.hasMany(models_3.CartItem, { foreignKey: 'userId' });
 models_3.CartItem.belongsTo(models_1.User, { foreignKey: 'userId' });
 models_4.Order.hasMany(models_5.OrderItem, { foreignKey: 'orderId' });
 models_5.OrderItem.belongsTo(models_4.Order, { foreignKey: 'orderId' });
-// Addresses associations
 models_1.User.hasMany(models_6.Address, { foreignKey: 'userId' });
 models_6.Address.belongsTo(models_1.User, { foreignKey: 'userId' });
 async function setupDatabase() {
     try {
         await sequelize_1.default.authenticate();
         console.log("Connection to MySQL has been established successfully.");
-        // Check if tables exist and have data
+        // --------------------------------------------------------------------------------------------------------------------------------------------------
+        // Make sure schema is up-to-date (adds new columns like Product.images without dropping data)
+        await sequelize_1.default.sync({ alter: true });
+        // Check if tables have data
         const userCount = await models_1.User.count();
         const productCount = await models_2.Product.count();
-        if (userCount === 0 && productCount === 0) {
-            console.log("Database is empty, inserting demo data...");
-            await sequelize_1.default.sync({ force: true }); // Only force sync if database is empty
+        if (productCount === 0) {
+            console.log("No products found, inserting demo data...");
             // Insert demo users with hashed passwords
             const hashedAdminPassword = await bcryptjs_1.default.hash("admin123", 12);
             const hashedCustomerPassword = await bcryptjs_1.default.hash("customer123", 12);
-            await models_1.User.create({
-                id: (0, uuid_1.v4)(),
-                email: "admin@shopzone.com",
-                password: hashedAdminPassword,
-                firstName: "Admin",
-                lastName: "User",
-                phone: null,
-                role: "admin",
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            });
-            await models_1.User.create({
-                id: (0, uuid_1.v4)(),
-                email: "customer@shopzone.com",
-                password: hashedCustomerPassword,
-                firstName: "Customer",
-                lastName: "User",
-                phone: null,
-                role: "customer",
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            });
+            if (userCount === 0) {
+                await models_1.User.create({
+                    id: (0, uuid_1.v4)(),
+                    email: "admin@shopzone.com",
+                    password: hashedAdminPassword,
+                    firstName: "Admin",
+                    lastName: "User",
+                    phone: null,
+                    role: "admin",
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                });
+                await models_1.User.create({
+                    id: (0, uuid_1.v4)(),
+                    email: "customer@shopzone.com",
+                    password: hashedCustomerPassword,
+                    firstName: "Customer",
+                    lastName: "User",
+                    phone: null,
+                    role: "customer",
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                });
+            }
             // Insert sample products
             const products = [
                 {
@@ -127,7 +130,7 @@ async function setupDatabase() {
             ];
             for (const product of products) {
                 await models_2.Product.create({
-                    ...product,
+                    ...product, // (...): Merge existing options
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 });
@@ -135,11 +138,9 @@ async function setupDatabase() {
             console.log("Demo data insertion completed.");
         }
         else {
-            console.log(`Database already has ${userCount} users and ${productCount} products. Skipping demo data insertion.`);
-            // Just sync without force to ensure schema is up to date
-            await sequelize_1.default.sync();
+            // console.log(`Database already has ${userCount} users and ${productCount} products. Skipping demo data insertion.`);
         }
-        console.log("Database setup completed.");
+        // console.log("Database setup completed.");
     }
     catch (error) {
         console.error("Unable to connect to the database or setup data:", error);

@@ -291,8 +291,10 @@
             checkoutData = JSON.parse(localStorage.getItem('checkoutData') || '{}');
             
             if (!checkoutData.items || checkoutData.items.length === 0) {
-                alert('Your cart is empty. Redirecting to shop...');
-                window.location.href = 'index.html';
+                showToast('Your cart is empty. Redirecting to shop...', 'warning');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
                 return;
             }
             
@@ -418,21 +420,27 @@
         }
 
         function validatePaymentForm() {
-            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
             
-            if (paymentMethod === 'upi') {
+            if (!paymentMethod) {
+                showToast('Please select a payment method', 'danger');
+                return false;
+            }
+            
+            if (paymentMethod.value === 'upi') {
                 const upiId = document.getElementById('upiId').value.trim();
                 if (!upiId || !upiId.includes('@')) {
                     document.getElementById('upiId').focus();
                     showToast('Please enter a valid UPI ID', 'danger');
                     return false;
                 }
-            } else if (paymentMethod !== 'cod') {
+            } else if (paymentMethod.value !== 'cod') {
                 const cardNumber = document.getElementById('cardNumber').value.trim();
                 const expiryDate = document.getElementById('expiryDate').value.trim();
                 const cvv = document.getElementById('cvv').value.trim();
+                const cardholderName = document.getElementById('cardholderName').value.trim();
                 
-                if (!cardNumber || !expiryDate || !cvv) {
+                if (!cardNumber || !expiryDate || !cvv || !cardholderName) {
                     showToast('Please fill in all card details', 'danger');
                     return false;
                 }
@@ -454,12 +462,14 @@
             
             // Payment method review
             const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+            if (!paymentMethod) {
+                document.getElementById('reviewPayment').innerHTML = 'No payment method selected';
+                return;
+            }
+            
             let paymentReview = '';
             
             switch (paymentMethod.value) {
-                // case 'credit_card':
-                //     paymentReview = `Credit Card ending in ${document.getElementById('cardNumber').value.slice(-4)}`;
-                //     break;
                 case 'debit_card':
                     paymentReview = `Debit Card ending in ${document.getElementById('cardNumber').value.slice(-4)}`;
                     break;
@@ -500,7 +510,11 @@
 
             try {
                 // Get payment method
-                const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+                const paymentMethodElement = document.querySelector('input[name="paymentMethod"]:checked');
+                if (!paymentMethodElement) {
+                    throw new Error('Please select a payment method');
+                }
+                const paymentMethod = paymentMethodElement.value;
 
                 // Prepare shipping address. If user has a default address, prefer it.
                 let defaultAddress = null;
@@ -535,8 +549,11 @@
                 // Ensure backend cart matches frontend selections to avoid removed items being charged
                 if (window.graphqlService && window.graphqlService.isAuthenticated && window.graphqlService.isAuthenticated()) {
                     try {
+                        // Clear backend cart first
                         await window.graphqlService.clearCart();
-                        const itemsToSync = (checkoutData && Array.isArray(checkoutData.items)) ? checkoutData.items : (window.shopZone ? window.shopZone.cart : []);
+                        
+                        // Add items from checkout data to backend cart
+                        const itemsToSync = checkoutData && Array.isArray(checkoutData.items) ? checkoutData.items : [];
                         for (const item of itemsToSync) {
                             if (item && item.id && item.quantity > 0) {
                                 await window.graphqlService.addToCart(item.id, item.quantity);
@@ -544,6 +561,7 @@
                         }
                     } catch (syncErr) {
                         console.warn('Cart sync warning:', syncErr);
+                        // Continue with order placement even if sync fails
                     }
                 }
 
@@ -567,7 +585,15 @@
 
             } catch (error) {
                 console.error('Error placing order:', error);
-                showToast('Failed to place order: ' + error.message, 'danger');
+                let errorMessage = 'Failed to place order. Please try again.';
+                
+                if (error.message) {
+                    errorMessage = error.message;
+                } else if (error.errors && error.errors.length > 0) {
+                    errorMessage = error.errors[0].message;
+                }
+                
+                showToast(errorMessage, 'danger');
             } finally {
                 placeOrderBtn.disabled = false;
                 placeOrderBtn.innerHTML = '<i class="fas fa-shopping-cart me-2"></i>Place Order';

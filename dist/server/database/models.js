@@ -87,6 +87,11 @@ function initProductModel(sequelize) {
             type: sequelize_1.DataTypes.STRING(255),
             allowNull: true,
         },
+        images: {
+            // store as JSON in MySQL (uses LONGTEXT with check) – Sequelize will stringify/parse
+            type: sequelize_1.DataTypes.JSON,
+            allowNull: true,
+        },
         stock: {
             type: sequelize_1.DataTypes.INTEGER,
             allowNull: false,

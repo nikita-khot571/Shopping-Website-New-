@@ -613,6 +613,41 @@ class ShopZoneApp {
     if (totalElement) totalElement.textContent = `${total.toFixed(2)}`;
   }
 
+  proceedToCheckout() {
+    console.log("ShopZoneApp.proceedToCheckout called");
+    console.log("Cart:", this.cart);
+    
+    if (!this.cart || this.cart.length === 0) {
+      console.error("Cart is empty");
+      this.showToast("Your cart is empty. Please add items to proceed to checkout.", "warning");
+      return;
+    }
+
+    // Calculate totals
+    const subtotal = this.cart.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    const tax = subtotal * 0.085;
+    const shipping = subtotal > 50 ? 0 : 5.99;
+    const total = subtotal + tax + shipping;
+
+    console.log("Calculated totals:", { subtotal, tax, shipping, total });
+
+    // Save checkout data for checkout page
+    const checkoutData = {
+      items: this.cart,
+      subtotal: subtotal,
+      tax: tax,
+      shipping: shipping,
+      total: total
+    };
+
+    localStorage.setItem("checkoutData", JSON.stringify(checkoutData));
+    console.log("Checkout data saved:", checkoutData);
+    window.location.href = "checkout.html";
+  }
+
   showToast(message, type = "info") {
     const toast = document.createElement("div");
     toast.className = `toast align-items-center text-white bg-${type} border-0`;
@@ -707,31 +742,16 @@ function loadCartItems() {
 }
 
 function proceedToCheckout() {
-  if (window.shopZone && window.shopZone.cart.length > 0) {
-    // Save checkout data for checkout page
-    const checkoutData = {
-      items: window.shopZone.cart,
-      subtotal: window.shopZone.cart.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-      ),
-      tax:
-        window.shopZone.cart.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0
-        ) * 0.085,
-      shipping:
-        window.shopZone.cart.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0
-        ) > 50
-          ? 0
-          : 5.99,
-    };
-
-    localStorage.setItem("checkoutData", JSON.stringify(checkoutData));
-    window.location.href = "checkout.html";
+  console.log("Global proceedToCheckout called");
+  
+  if (!window.shopZone) {
+    console.error("shopZone not initialized");
+    alert("Please wait for the page to load completely");
+    return;
   }
+  
+  // Use the ShopZoneApp method
+  window.shopZone.proceedToCheckout();
 }
 
 function applyPromoCode() {

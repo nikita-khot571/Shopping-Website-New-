@@ -28,7 +28,7 @@ class ProductModel {
         return await models_1.Product.findByPk(id);
     }
     static async findAll(options) {
-        // Handle search functionality
+        // Handle search functionality on Home page
         if (options?.where?.name) {
             options.where = {
                 ...options.where,

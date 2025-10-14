@@ -456,7 +456,7 @@
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div>
                                 <h6 class="mb-1">Order #${order.id.slice(-8)}</h6>
-                                <small class="text-muted">Placed on ${new Date(order.createdAt).toLocaleDateString()}</small>
+                                
                             </div>
                             <div class="text-end">
                                 <span class="badge bg-${getStatusColor(order.status)} rounded-pill">${order.status}</span>
@@ -525,7 +525,7 @@
                                     <div class="col-md-6">
                                         <h6>Order Information</h6>
                                         <p><strong>Order ID:</strong> #${order.id.slice(-8)}</p>
-                                        <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+                                       
                                         <p><strong>Status:</strong> <span class="badge bg-${getStatusColor(order.status)}">${order.status}</span></p>
                                         <p><strong>Total:</strong> <span class="text-primary fw-bold">₹${parseFloat(order.total).toFixed(2)}</span></p>
                                     </div>
