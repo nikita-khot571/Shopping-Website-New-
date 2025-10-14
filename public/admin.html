@@ -150,9 +150,9 @@
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h2><i class="fas fa-box me-2"></i>Product Management</h2>
                         <div>
-                            <button class="btn btn-outline-secondary me-2" onclick="exportProducts()">
+                            <!-- <button class="btn btn-outline-secondary me-2" onclick="exportProducts()">
                                 <i class="fas fa-download me-2"></i>Export
-                            </button>
+                            </button> -->
                             <button class="btn btn-primary" onclick="showAddProductModal()">
                                 <i class="fas fa-plus me-2"></i>Add Product
                             </button>
@@ -196,9 +196,9 @@
                 <div id="ordersSection" class="section-content" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h2><i class="fas fa-shopping-cart me-2"></i>Order Management</h2>
-                        <button class="btn btn-outline-secondary" onclick="exportOrders()">
+                        <!-- <button class="btn btn-outline-secondary" onclick="exportOrders()">
                             <i class="fas fa-download me-2"></i>Export Orders
-                        </button>
+                        </button> -->
                     </div>
                     
                   
@@ -238,9 +238,9 @@
                 <div id="usersSection" class="section-content" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h2><i class="fas fa-users me-2"></i>User Management</h2>
-                        <button class="btn btn-outline-secondary" onclick="exportUsers()">
+                        <!-- <button class="btn btn-outline-secondary" onclick="exportUsers()">
                             <i class="fas fa-download me-2"></i>Export Users
-                        </button>
+                        </button> -->
                     </div>
                     
                    
@@ -1572,70 +1572,8 @@
             return categories;
         }
 
-        function exportData() {
-            showToast('Export functionality coming soon!', 'info');
-        }
-
-        function exportProducts() {
-            const csv = convertToCSV(products, ['id', 'name', 'category', 'price', 'stock', 'createdAt']);
-            downloadCSV(csv, 'products.csv');
-            showToast('Products exported successfully!', 'success');
-        }
-
-        function exportOrders() {
-            const ordersData = orders.map(order => ({
-                id: order.id,
-                customer: `${order.user.firstName} ${order.user.lastName}`,
-                email: order.user.email,
-                total: order.total,
-                status: order.status,
-                items: order.items.length,
-                date: formatDate(order.createdAt)
-            }));
-            const csv = convertToCSV(ordersData, ['id', 'customer', 'email', 'total', 'status', 'items', 'date']);
-            downloadCSV(csv, 'orders.csv');
-            showToast('Orders exported successfully!', 'success');
-        }
-
-        function exportUsers() {
-            const usersData = users.map(user => ({
-                id: user.id,
-                name: `${user.firstName} ${user.lastName}`,
-                email: user.email,
-                role: user.role
-            }));
-            const csv = convertToCSV(usersData, ['id', 'name', 'email', 'role']);
-            downloadCSV(csv, 'users.csv');
-            showToast('Users exported successfully!', 'success');
-        }
-
-        function convertToCSV(data, headers) {
-            if (data.length === 0) return '';
-            
-            const csvHeaders = headers.join(',');
-            const csvRows = data.map(row => 
-                headers.map(header => {
-                    const value = row[header];
-                    return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
-                }).join(',')
-            );
-            
-            return [csvHeaders, ...csvRows].join('\n');
-        }
-
-        function downloadCSV(csv, filename) {
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            window.URL.revokeObjectURL(url);
-        }
-
-        function printOrder() {
-            window.print();
-        }
+       
+       
 
         function showToast(message, type = 'info') {
             const toast = document.createElement('div');
