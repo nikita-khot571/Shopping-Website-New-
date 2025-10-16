@@ -282,7 +282,7 @@ class ShopZoneApp {
             <div class="col-md-6 col-lg-4 col-xl-3">
                 <div class="card product-card h-100" data-product-id="${product.id}" onclick="openProductDetail('${product.id}')" style="cursor:pointer;">
                     <div class="product-image">
-                        <img src="${product.image}" alt="${product.name}" class="img-fluid" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=No+Image';" />
+                        <img src="${product.image}" alt="${product.images}" class="img-fluid" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=No+Image';" />
                     </div>
                     <div class="product-info">
                         <div class="product-category">${product.category}</div>
@@ -542,7 +542,7 @@ class ShopZoneApp {
           const price = parseFloat(item.price) || 0;
           const quantity = parseInt(item.quantity) || 1;
           const id = item.id || 'unknown';
-          const image = item.image; // Get the image URL from the item
+          const image = item.image; 
 
           return `
             <div class="cart-item">
@@ -754,31 +754,6 @@ function proceedToCheckout() {
   window.shopZone.proceedToCheckout();
 }
 
-function applyPromoCode() {
-  const promoCode = document.getElementById("promoCode");
-  if (promoCode) {
-    const code = promoCode.value.trim().toUpperCase();
-
-    // Mock promo codes
-    const validCodes = {
-      SAVE10: 0.1,
-      WELCOME20: 0.2,
-      NEWUSER: 0.15,
-    };
-
-    if (validCodes[code]) {
-      window.shopZone.showToast(
-        `Promo code applied! ${validCodes[code] * 100}% off`,
-        "success"
-      );
-      // Apply discount logic here
-    } else {
-      window.shopZone.showToast("Invalid promo code", "danger");
-    }
-
-    promoCode.value = "";
-  }
-}
 
 function updateCartCount() {
   if (window.shopZone) {

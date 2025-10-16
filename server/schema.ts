@@ -540,7 +540,7 @@ export const resolvers = {
       } catch (error: any) {
         console.error("Logout error:", error);
         throw new Error("Failed to logout");
-      }
+      } 
     },
 
     createOrder: async (
@@ -617,7 +617,7 @@ export const resolvers = {
 
         // Calculate tax and shipping
         const tax = subtotal * 0.085; // 8.5% tax
-        const shipping = subtotal > 50 ? 0 : 5.99; // Free shipping over $50
+        const shipping = subtotal > 500 ? 0 : 5.99; // Free shipping over 500
         const total = subtotal + tax + shipping;
 
         // Create order

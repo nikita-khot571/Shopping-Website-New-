@@ -79,11 +79,11 @@
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">First Name</label>
-                                                <input type="text" class="form-control" id="profileFirstName" required>
+                                                <input type="text" class="form-control" id="profileFirstName" required readonly>
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">Last Name</label>
-                                                <input type="text" class="form-control" id="profileLastName" required>
+                                                <input type="text" class="form-control" id="profileLastName" required readonly>
                                             </div>
                                         </div>
                                         <div class="mb-3">
@@ -213,38 +213,6 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary" onclick="saveAddress()">Save Address</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Change Password Modal -->
-    <div class="modal fade" id="changePasswordModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Change Password</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="changePasswordForm">
-                        <div class="mb-3">
-                            <label class="form-label">Current Password</label>
-                            <input type="password" class="form-control" id="currentPassword" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">New Password</label>
-                            <input type="password" class="form-control" id="newPassword" required minlength="6">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Confirm New Password</label>
-                            <input type="password" class="form-control" id="confirmPassword" required minlength="6">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="changePassword()">Change Password</button>
                 </div>
             </div>
         </div>

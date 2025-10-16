@@ -37,7 +37,7 @@
         <div class="row">
             <div class="col-md-3 col-lg-2 sidebar p-0">
                 <div class="p-3">
-                    <h6 class="text-muted">DASHBOARD</h6>
+                    <h6 class="text-muted"></h6>
                     <ul class="nav nav-pills flex-column">
                         <li class="nav-item mb-1">
                             <a class="nav-link active" href="#dashboard" onclick="showSection('dashboard', event)">
@@ -196,9 +196,7 @@
                 <div id="ordersSection" class="section-content" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h2><i class="fas fa-shopping-cart me-2"></i>Order Management</h2>
-                        <!-- <button class="btn btn-outline-secondary" onclick="exportOrders()">
-                            <i class="fas fa-download me-2"></i>Export Orders
-                        </button> -->
+                       
                     </div>
                     
                   
@@ -214,7 +212,7 @@
                                             <th>Items</th>
                                             <th>Total</th>
                                             <th>Status</th>
-                                            <th>Date</th>
+                                             <th>Date</th>  
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -321,17 +319,17 @@
                             <textarea class="form-control" id="productDescription" rows="3" placeholder="Enter product description..."></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Image URL</label>
-                            <input type="url" class="form-control" id="productImage" placeholder="https://example.com/image.jpg">
+                            <label class="form-label">Image URL *</label>
+                            <input type="url" class="form-control" id="productImage" placeholder="image.jpg" required>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Additional Image URL 2</label>
-                                <input type="url" class="form-control" id="productImage2" placeholder="https://example.com/image2.jpg">
+                                <input type="url" class="form-control" id="productImage2" placeholder="image2.jpg">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Additional Image URL 3</label>
-                                <input type="url" class="form-control" id="productImage3" placeholder="https://example.com/image3.jpg">
+                                <input type="url" class="form-control" id="productImage3" placeholder="image3.jpg">
                             </div>
                         </div>
                         <div class="mb-3">
@@ -1179,10 +1177,7 @@
                                 <td><strong>Order ID:</strong></td>
                                 <td>#${order.id.slice(-8)}</td>
                             </tr>
-                            <tr>
-                                <td><strong>Date:</strong></td>
-                                <td>${formatDateTime(order.createdAt)}</td>
-                            </tr>
+                            
                             <tr>
                                 <td><strong>Status:</strong></td>
                                 <td><span class="badge bg-${getStatusColor(order.status)}">${order.status}</span></td>
@@ -1300,7 +1295,6 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Order ID</th>
-                                    <th>Date</th>
                                     <th>Items</th>
                                     <th>Total</th>
                                     <th>Status</th>
@@ -1310,7 +1304,6 @@
                                 ${userOrders.map(order => `
                                     <tr>
                                         <td>#${order.id.slice(-8)}</td>
-                                        <td>${formatDate(order.createdAt)}</td>
                                         <td>${order.items.length}</td>
                                         <td>₹${parseFloat(order.total).toFixed(2)}</td>
                                         <td><span class="badge bg-${getStatusColor(order.status)}">${order.status}</span></td>

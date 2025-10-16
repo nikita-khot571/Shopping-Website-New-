@@ -411,24 +411,7 @@ const GraphQLMutations = {
                 message
             }
         }
-    `,
-
-  // Review Mutations
-  ADD_REVIEW: `
-        mutation AddReview($productId: ID!, $input: ReviewInput!) {
-            addReview(productId: $productId, input: $input) {
-                id
-                rating
-                comment
-                user {
-                    id
-                    firstName
-                    lastName
-                }
-                createdAt
-            }
-        }
-    `,
+    `,  
 
   LOGOUT: `
         mutation Logout {
@@ -624,22 +607,14 @@ class GraphQLService {
     });
   }
 
-  // Review Services
-  async addReview(productId, reviewData) {
-    return this.client.mutation(GraphQLMutations.ADD_REVIEW, {
-      productId,
-      input: reviewData,
-    });
-  }
+ 
 
   // Utility Methods
   async logout() {
     try {
-      // Call the server-side logout mutation to log the event
       await this.client.mutation(GraphQLMutations.LOGOUT);
     } catch (error) {
       console.error("Server logout error:", error);
-      // Continue with client-side logout even if server call fails
     }
 
     // Clear local auth state
@@ -661,17 +636,13 @@ class GraphQLService {
   }
 }
 
-// Apollo Client Integration (Alternative Implementation)
 class ApolloGraphQLService {
   constructor() {
-    // This would be used if Apollo Client is available
     this.setupApolloClient();
   }
 
   setupApolloClient() {
-    // Apollo Client setup would go here
-    //import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
-
+   
     const httpLink = createHttpLink({
       uri: "/graphql",
       headers: {
@@ -696,7 +667,6 @@ class ApolloGraphQLService {
   }
 }
 
-// Error Handling
 class GraphQLError extends Error {
   constructor(message, code, path) {
     super(message);
@@ -708,7 +678,6 @@ class GraphQLError extends Error {
 
 // GraphQL Type Definitions (for reference)
 const GraphQLTypes = {
-  // Input Types
   RegisterInput: `
         input RegisterInput {
             email: String!
